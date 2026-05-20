@@ -19,7 +19,7 @@ export default function SimulationPage() {
 
   const { data: programs } = useQuery<Program[]>({
     queryKey: ['programs'],
-    queryFn: () => api.get('/admin/programs').then((r) => r.data),
+    queryFn: () => api.get('/programs').then((r) => r.data),
   })
 
   const { data: graphData } = useQuery({
