@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { MessageCircle, X, Send } from 'lucide-react'
+import { MessageSquare, X, Send, Bot } from 'lucide-react'
 import { api } from '@/lib/api'
 
 interface Message {
@@ -35,67 +35,98 @@ export default function ChatWidget() {
   }, [messages, mutation.isPending])
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
       {open && (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl w-80 flex flex-col overflow-hidden"
-          style={{ height: '420px' }}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-violet-600">
-            <span className="text-white font-semibold text-sm">MaIA — Asistente</span>
-            <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white transition">
-              <X size={16} />
+        <div
+          className="bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          style={{ width: 340, height: 460 }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-2.5 px-4 py-3 bg-slate-900 flex-shrink-0">
+            <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center">
+              <Bot size={14} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white leading-none">MaIA</p>
+              <p className="text-[10px] text-white/50 mt-0.5">Asistente Académico</p>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-white/50 hover:text-white transition-colors p-1"
+            >
+              <X size={15} />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-slate-50">
             {messages.length === 0 && (
-              <p className="text-xs text-gray-400 text-center mt-4">
-                ¡Hola! Pregúntame sobre tu malla curricular.
-              </p>
+              <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center mb-2">
+                  <Bot size={18} className="text-slate-500" />
+                </div>
+                <p className="text-xs font-semibold text-slate-600">¿En qué te ayudo?</p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Pregúntame sobre tu malla curricular o materias disponibles.
+                </p>
+              </div>
             )}
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`text-sm rounded-xl px-3 py-2 max-w-[90%] ${
-                  msg.role === 'user'
-                    ? 'bg-violet-600 text-white self-end'
-                    : 'bg-gray-100 text-gray-800 self-start'
-                }`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {msg.content}
+                <div
+                  className={`max-w-[82%] text-xs leading-relaxed rounded-2xl px-3 py-2 ${
+                    msg.role === 'user'
+                      ? 'bg-slate-900 text-white rounded-br-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm shadow-sm'
+                  }`}
+                >
+                  {msg.content}
+                </div>
               </div>
             ))}
             {mutation.isPending && (
-              <div className="bg-gray-100 text-gray-500 text-sm rounded-xl px-3 py-2 self-start">
-                Pensando...
+              <div className="flex justify-start">
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm">
+                  <div className="flex gap-1 items-center">
+                    <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          <div className="flex items-center gap-2 border-t border-gray-100 px-3 py-2">
+          {/* Input */}
+          <div className="flex items-center gap-2 border-t border-slate-200 px-3 py-2.5 bg-white flex-shrink-0">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}
-              placeholder="Escribe tu pregunta..."
-              className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              placeholder="Escribe tu duda académica..."
+              className="flex-1 text-xs text-slate-700 placeholder-slate-400 bg-transparent outline-none"
             />
             <button
               onClick={send}
               disabled={mutation.isPending || !input.trim()}
-              className="text-violet-600 hover:text-violet-800 disabled:opacity-40 transition"
+              className="w-7 h-7 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
             >
-              <Send size={18} />
+              <Send size={12} />
             </button>
           </div>
         </div>
       )}
 
+      {/* FAB */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="bg-violet-600 hover:bg-violet-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition"
+        className="w-12 h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
       >
-        {open ? <X size={22} /> : <MessageCircle size={22} />}
+        {open ? <X size={18} /> : <MessageSquare size={18} />}
       </button>
     </div>
   )
