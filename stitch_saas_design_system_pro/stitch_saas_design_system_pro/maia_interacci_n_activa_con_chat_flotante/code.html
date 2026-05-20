@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#2a1700",
+                    "surface-dim": "#cbdbf5",
+                    "background": "#f8f9ff",
+                    "on-secondary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "surface": "#f8f9ff",
+                    "on-secondary-container": "#00714d",
+                    "tertiary": "#140900",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#1e1b4b",
+                    "on-surface-variant": "#47464f",
+                    "inverse-primary": "#c4c1fb",
+                    "on-surface": "#0b1c30",
+                    "surface-container": "#e5eeff",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-tertiary-container": "#c07a00",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#5b598c",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-primary-container": "#8683ba",
+                    "secondary": "#006c49",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "primary-fixed": "#e3dfff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dce9ff",
+                    "primary-fixed-dim": "#c4c1fb",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#213145",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container-low": "#eff4ff",
+                    "outline-variant": "#c8c5d0",
+                    "on-background": "#0b1c30",
+                    "surface-variant": "#d3e4fe",
+                    "secondary-container": "#6cf8bb",
+                    "outline": "#787680"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "container_max": "1440px",
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "xs": "4px",
+                    "sidebar_width": "280px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "code-display": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "code-display": ["13px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-sm": ["11px", {"lineHeight": "1", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .canvas-grid {
+            background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .course-node {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-[280px] h-screen sticky left-0 top-0 flex flex-col border-r border-outline-variant bg-surface">
+<div class="p-lg flex flex-col gap-2">
+<span class="font-headline-md text-headline-md font-bold text-primary">EduPortal</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Academic Management</span>
+</div>
+<nav class="flex-1 mt-md">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+<span class="font-body-md">Curriculum Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-body-md">Simulation Lab</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="font-body-md">AI Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="p-md">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all">
+                    Academic Advisor
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-lg py-sm max-w-container_max mx-auto h-16 bg-surface shadow-sm z-10">
+<div class="flex items-center gap-md flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 focus:border-primary outline-none text-body-md" placeholder="Search courses, prerequisites, or outcomes..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+</button>
+<div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-low p-1 pr-3 rounded-full transition-all">
+<img alt="Student Portrait" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional, high-resolution portrait of a university student with a confident expression, set against a blurred academic backdrop. The lighting is soft and natural, emphasizing a bright and modern educational environment. The overall aesthetic is clean and focused, using a palette of soft whites and academic blues to maintain institutional trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwxbdwjJbOtRzWi2KV_4nWZ0DsTYr6vaKmsnCW8cKUSEcRX6tonvdD12gzyoZAz3V7fI2wNLXGqlCsed5JRmCFPf_Iu54pYJoscjvPylbB8aZrwFK4MYXFFu46QCz9HaniA10MLCExq59PRovTjaQ-leSSvaMbakcWbiAG7fyeJ6IG50vnWzpodsHCkD6QfbGDUptjPw8l935mwQis9EP374xWiXBt883rEinnS20kwgWJZhfQYGfEEIpQ7oooHYYb4wQYtQf-ZW4F"/>
+<span class="font-label-md text-label-md">Diego R.</span>
+</div>
+</div>
+</header>
+<!-- Graph Canvas -->
+<div class="flex-1 relative overflow-auto canvas-grid bg-slate-50">
+<!-- Visual Dimming Overlay -->
+<div class="absolute inset-0 bg-primary/5 pointer-events-none z-10"></div>
+<!-- Simulation Graph Layer -->
+<div class="p-xl min-w-[1200px] min-h-[800px] relative">
+<!-- Semester 1 Column -->
+<div class="absolute left-8 top-8 space-y-12">
+<div class="text-label-md text-on-surface-variant uppercase tracking-widest mb-4">Semester I</div>
+<!-- Algebra Card -->
+<div class="course-node w-64 bg-white p-4 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded">Passed</span>
+<span class="text-label-sm font-bold text-on-surface-variant">4 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm">Algebra Lineal</h4>
+<p class="text-label-sm text-on-surface-variant">MAT-101</p>
+</div>
+<!-- Intro to CS -->
+<div class="course-node w-64 bg-white p-4 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded">Passed</span>
+<span class="text-label-sm font-bold text-on-surface-variant">3 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm">Introducción a CS</h4>
+<p class="text-label-sm text-on-surface-variant">CS-101</p>
+</div>
+</div>
+<!-- Semester 2 Column -->
+<div class="absolute left-[360px] top-8 space-y-12">
+<div class="text-label-md text-on-surface-variant uppercase tracking-widest mb-4">Semester II</div>
+<!-- Algoritmos (The Focus Point) -->
+<div class="course-node w-64 bg-error-container p-4 rounded-lg border-2 border-error shadow-lg ring-4 ring-error/10 relative z-20">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-error text-on-error rounded">Active Conflict</span>
+<span class="text-label-sm font-bold text-error">4 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm text-primary">Algoritmos I</h4>
+<p class="text-label-sm text-on-surface-variant">CS-201</p>
+<div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-error rounded-full flex items-center justify-center text-white shadow-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="warning">warning</span>
+</div>
+</div>
+<!-- Calculo I -->
+<div class="course-node w-64 bg-white p-4 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded">Passed</span>
+<span class="text-label-sm font-bold text-on-surface-variant">4 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm">Cálculo I</h4>
+<p class="text-label-sm text-on-surface-variant">MAT-201</p>
+</div>
+</div>
+<!-- Semester 3 Column (Dependent Nodes) -->
+<div class="absolute left-[680px] top-8 space-y-12">
+<div class="text-label-md text-on-surface-variant uppercase tracking-widest mb-4">Semester III</div>
+<!-- Estructuras de Datos (Blocked) -->
+<div class="course-node w-64 bg-surface-dim/40 p-4 rounded-lg border border-outline border-dashed opacity-80 group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed rounded">Blocked</span>
+<span class="text-label-sm font-bold text-on-surface-variant">4 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm text-on-surface-variant">Estructuras de Datos</h4>
+<p class="text-label-sm text-on-surface-variant">CS-301</p>
+</div>
+<!-- Bases de Datos I (Blocked) -->
+<div class="course-node w-64 bg-surface-dim/40 p-4 rounded-lg border border-outline border-dashed opacity-80">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed rounded">Blocked</span>
+<span class="text-label-sm font-bold text-on-surface-variant">3 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm text-on-surface-variant">Bases de Datos I</h4>
+<p class="text-label-sm text-on-surface-variant">CS-302</p>
+</div>
+<!-- Arquitectura (Blocked) -->
+<div class="course-node w-64 bg-surface-dim/40 p-4 rounded-lg border border-outline border-dashed opacity-80">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed rounded">Blocked</span>
+<span class="text-label-sm font-bold text-on-surface-variant">3 CR</span>
+</div>
+<h4 class="font-headline-sm text-sm text-on-surface-variant">Arquitectura Comp.</h4>
+<p class="text-label-sm text-on-surface-variant">CS-303</p>
+</div>
+</div>
+<!-- Connection Lines (Visual Representation) -->
+<svg class="absolute inset-0 pointer-events-none" height="100%" width="100%">
+<!-- Normal lines -->
+<path d="M 288 152 L 360 110" fill="none" stroke="#cbd5e1" stroke-width="2"></path>
+<path d="M 288 260 L 360 110" fill="none" stroke="#cbd5e1" stroke-width="2"></path>
+<!-- Warning/Impact lines from Algoritmos -->
+<path d="M 616 110 L 680 110" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M 616 110 L 680 230" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M 616 110 L 680 350" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Chat Floating Island (Expanded) -->
+<div class="fixed bottom-lg right-lg w-[400px] max-h-[600px] flex flex-col glass-panel border border-outline-variant shadow-2xl rounded-xl overflow-hidden z-50">
+<!-- Chat Header -->
+<div class="bg-primary p-md flex items-center justify-between text-on-primary">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center border border-on-primary-container/20">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="smart_toy">smart_toy</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-sm font-bold">MaIA - Asistente Académico</h3>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="text-[10px] uppercase font-bold tracking-wider opacity-80">Online</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1 hover:bg-white/10 rounded"><span class="material-symbols-outlined" data-icon="minimize">minimize</span></button>
+<button class="p-1 hover:bg-white/10 rounded"><span class="material-symbols-outlined" data-icon="close">close</span></button>
+</div>
+</div>
+<!-- Chat History -->
+<div class="flex-1 overflow-y-auto p-md space-y-4 max-h-[380px]">
+<!-- User Message -->
+<div class="flex flex-col items-end gap-1">
+<div class="bg-primary-container text-on-primary-container p-3 rounded-2xl rounded-tr-none max-w-[85%]">
+<p class="font-body-md">¿Qué pasa si repruebo Algoritmos?</p>
+</div>
+<span class="text-[10px] text-on-surface-variant mr-1">14:02 PM</span>
+</div>
+<!-- MaIA Response -->
+<div class="flex flex-col items-start gap-1">
+<div class="flex gap-2 max-w-[90%]">
+<div class="w-8 h-8 shrink-0 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container-high text-on-surface p-3 rounded-2xl rounded-tl-none border border-outline-variant/30 shadow-sm">
+<p class="font-body-md leading-relaxed">
+                                    Si repruebas <span class="font-bold text-error">Algoritmos</span>, se bloquearían <span class="underline decoration-error">3 materias</span> del próximo semestre y tu graduación se retrasaría 6 meses.
+                                </p>
+<p class="font-body-md mt-2">¿Quieres ver el impacto detallado en el simulador?</p>
+</div>
+</div>
+<span class="text-[10px] text-on-surface-variant ml-10">14:03 PM</span>
+</div>
+<!-- Quick Actions -->
+<div class="flex flex-wrap gap-2 ml-10 mt-2">
+<button class="px-3 py-1.5 bg-surface border border-primary text-primary rounded-full text-label-sm font-bold hover:bg-primary hover:text-white transition-all">
+                            Ver impacto
+                        </button>
+<button class="px-3 py-1.5 bg-surface border border-outline-variant text-on-surface-variant rounded-full text-label-sm hover:bg-surface-container transition-all">
+                            Ver requisitos
+                        </button>
+<button class="px-3 py-1.5 bg-surface border border-outline-variant text-on-surface-variant rounded-full text-label-sm hover:bg-surface-container transition-all">
+                            Hablar con un asesor
+                        </button>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-md bg-surface-container-low border-t border-outline-variant">
+<div class="flex items-center gap-2 bg-surface rounded-xl border border-outline-variant p-2 focus-within:border-primary transition-all">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="attach_file">attach_file</span>
+</button>
+<input class="flex-1 bg-transparent border-none outline-none text-body-md py-1" placeholder="Escribe tu duda académica..." type="text"/>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center hover:opacity-90 active:scale-90 transition-all">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- FAB (Suppressed as per rules on detail/task views, but keeping it small if context is strictly Dashboard) -->
+<!-- Since we are in an active chat interaction, the main FAB is hidden to prioritize the chat window -->
+</main>
+</div>
+<script>
+        // Simple micro-interaction for course nodes
+        document.querySelectorAll('.course-node').forEach(node => {
+            node.addEventListener('mouseenter', () => {
+                node.style.transform = 'translateY(-4px)';
+            });
+            node.addEventListener('mouseleave', () => {
+                node.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Atmospheric grid movement on mouse move
+        const canvas = document.querySelector('.canvas-grid');
+        canvas.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 10;
+            const y = (e.clientY / window.innerHeight) * 10;
+            canvas.style.backgroundPosition = `${x}px ${y}px`;
+        });
+    </script>
+</body></html>

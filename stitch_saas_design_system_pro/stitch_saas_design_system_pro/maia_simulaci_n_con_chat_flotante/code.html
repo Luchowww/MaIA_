@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary": "#006c49",
+                        "tertiary": "#140900",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-container": "#1e1b4b",
+                        "on-secondary-container": "#00714d",
+                        "surface-dim": "#cbdbf5",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-background": "#0b1c30",
+                        "tertiary-container": "#331d00",
+                        "inverse-surface": "#213145",
+                        "on-surface": "#0b1c30",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#8683ba",
+                        "on-primary-fixed": "#181445",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary-fixed-variant": "#444173",
+                        "surface-tint": "#5b598c",
+                        "primary-fixed": "#e3dfff",
+                        "on-tertiary-container": "#c07a00",
+                        "on-secondary-fixed": "#002113",
+                        "on-surface-variant": "#47464f",
+                        "outline-variant": "#c8c5d0",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d3e4fe",
+                        "outline": "#787680",
+                        "secondary-container": "#6cf8bb",
+                        "inverse-on-surface": "#eaf1ff",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "surface-bright": "#f8f9ff",
+                        "primary-fixed-dim": "#c4c1fb",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary": "#070235",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "inverse-primary": "#c4c1fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "sidebar_width": "280px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "container_max": "1440px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "code-display": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "1", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "code-display": ["13px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .node-line {
+            transition: stroke 0.3s ease, stroke-width 0.3s ease;
+        }
+        .simulation-active .course-blocked {
+            border-color: #ba1a1a !important;
+            background-color: #ffdad6 !important;
+            color: #93000a !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="w-[280px] h-screen sticky left-0 top-0 flex flex-col border-r border-outline-variant bg-surface shrink-0 z-50">
+<div class="p-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EduPortal</h1>
+<p class="font-body-md text-on-surface-variant text-sm">Academic Management</p>
+</div>
+<nav class="flex-1 px-sm space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+<span class="font-body-md">Curriculum Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-highest dark:bg-primary-container active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-body-md">Simulation Lab</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="font-body-md">AI Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="p-lg border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-lg font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">contact_support</span>
+                Academic Advisor
+            </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="h-16 flex justify-between items-center px-lg bg-surface shadow-sm shrink-0">
+<div class="flex items-center gap-md flex-1">
+<h2 class="font-headline-sm text-headline-sm text-primary">Simulation Lab</h2>
+<div class="relative w-full max-w-md ml-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-primary/20" placeholder="Search courses to simulate..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="flex items-center gap-sm bg-surface-container-low px-3 py-1 rounded-full border border-outline-variant">
+<img alt="Student Portrait" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBD7Fr-JfNGeSiqUlAG-RoVsYUO_dIL1h4HBT-KRrcy-BObsmpbuAN9FnuIVyHbLe3H8abIlofV_267i75yC-VRtWMeY5cN77CIkoq3G7dvJ1cQo5bRJOSMylgbIrLLSvwsF6XFjUd-6Z_IgUb_AeidfKsMW_1HCkq42KNHBNXHOSLTA0DsRlgB8ldY5982jfbU4k2X8_Df7Ts_d9IeB25RMcvF17T0g4PtYQp_01lMZJYfC8sIHb3ap4T4IFTUgtZgaO5K8c1vD-fm"/>
+<span class="font-label-md text-primary">ID: 2024-8812</span>
+</div>
+</div>
+</header>
+<!-- Simulation Grid -->
+<div class="flex-1 flex overflow-hidden p-lg gap-lg bg-background">
+<!-- Left Panel: Input -->
+<section class="w-1/3 flex flex-col bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<div>
+<h3 class="font-headline-sm text-primary">Simulation Controls</h3>
+<p class="font-body-md text-on-surface-variant text-xs">Select courses to fail or cancel</p>
+</div>
+<span class="material-symbols-outlined text-secondary">tune</span>
+</div>
+<div class="flex-1 overflow-y-auto p-md space-y-3 custom-scrollbar" id="course-list">
+<!-- Semester 5 -->
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 mt-4">Current Semester (05)</div>
+<div class="group flex items-center justify-between p-3 border border-outline-variant rounded-lg hover:border-primary transition-all bg-white" data-course-id="MAT-301">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center font-code-display text-primary">M301</div>
+<div>
+<p class="font-label-md text-primary">Advanced Calculus III</p>
+<p class="text-[10px] text-on-surface-variant">Credits: 4 • PR: MAT-201</p>
+</div>
+</div>
+<select class="text-xs bg-surface-container-low border-none rounded py-1 pr-8 focus:ring-0 cursor-pointer" onchange="handleSimChange(this)">
+<option value="none">Active</option>
+<option class="text-error" value="failed">Fail</option>
+<option class="text-on-tertiary-container" value="cancelled">Cancel</option>
+</select>
+</div>
+<div class="group flex items-center justify-between p-3 border border-outline-variant rounded-lg hover:border-primary transition-all bg-white" data-course-id="PHY-202">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center font-code-display text-primary">P202</div>
+<div>
+<p class="font-label-md text-primary">Electromagnetism</p>
+<p class="text-[10px] text-on-surface-variant">Credits: 4 • PR: PHY-101</p>
+</div>
+</div>
+<select class="text-xs bg-surface-container-low border-none rounded py-1 pr-8 focus:ring-0 cursor-pointer" onchange="handleSimChange(this)">
+<option value="none">Active</option>
+<option class="text-error" value="failed">Fail</option>
+<option class="text-on-tertiary-container" value="cancelled">Cancel</option>
+</select>
+</div>
+<div class="group flex items-center justify-between p-3 border border-outline-variant rounded-lg hover:border-primary transition-all bg-white" data-course-id="SFT-103">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center font-code-display text-primary">S103</div>
+<div>
+<p class="font-label-md text-primary">Operating Systems</p>
+<p class="text-[10px] text-on-surface-variant">Credits: 3 • PR: SFT-101</p>
+</div>
+</div>
+<select class="text-xs bg-surface-container-low border-none rounded py-1 pr-8 focus:ring-0 cursor-pointer" onchange="handleSimChange(this)">
+<option value="none">Active</option>
+<option class="text-error" value="failed">Fail</option>
+<option class="text-on-tertiary-container" value="cancelled">Cancel</option>
+</select>
+</div>
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 mt-6">Next Semester (06)</div>
+<div class="group flex items-center justify-between p-3 border border-outline-variant rounded-lg hover:border-primary transition-all bg-white opacity-70" data-course-id="MAT-401">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-low flex items-center justify-center font-code-display text-on-surface-variant">M401</div>
+<div>
+<p class="font-label-md text-primary">Differential Equations</p>
+<p class="text-[10px] text-on-surface-variant">Credits: 4 • PR: MAT-301</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-outline">LOCKED</span>
+</div>
+</div>
+<div class="p-lg bg-surface border-t border-outline-variant space-y-lg">
+<div class="bg-surface-container p-md rounded-lg">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-on-surface-variant">Graduation Forecast</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">info</span>
+</div>
+<div class="text-2xl font-headline-lg text-primary" id="grad-date">June 2026</div>
+<div class="text-xs text-secondary font-bold flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                            On track
+                        </div>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-sm flex items-center justify-center gap-3 hover:shadow-lg transition-all active:scale-95 group" onclick="executeSimulation()">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">cycle</span>
+                        Run Simulation
+                    </button>
+</div>
+</section>
+<!-- Right Panel: Impact Graph -->
+<section class="flex-1 bg-surface-container-low rounded-xl border border-outline-variant shadow-sm relative overflow-hidden flex flex-col">
+<div class="p-lg flex justify-between items-center bg-white border-b border-outline-variant">
+<h3 class="font-headline-sm text-primary">Curriculum Impact Visualization</h3>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest rounded text-[10px] font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> PASSED
+                        </div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded text-[10px] font-bold">
+<span class="w-2 h-2 rounded-full bg-primary"></span> CURRENT
+                        </div>
+<div class="hidden flex items-center gap-2 px-3 py-1 bg-error-container rounded text-[10px] font-bold text-error" id="alert-legend">
+<span class="w-2 h-2 rounded-full bg-error"></span> BLOCKED
+                        </div>
+</div>
+</div>
+<div class="flex-1 relative p-xl overflow-auto flex items-center justify-center" id="graph-container">
+<svg class="absolute inset-0 w-full h-full pointer-events-none" id="svg-connections">
+<!-- Connecting lines between nodes -->
+<path class="node-line" d="M 280,200 L 480,200" fill="none" id="path-1" stroke="#cbd5e1" stroke-width="2"></path>
+<path class="node-line" d="M 280,320 L 480,320" fill="none" id="path-2" stroke="#cbd5e1" stroke-width="2"></path>
+<path class="node-line" d="M 480,200 L 680,200" fill="none" id="path-3" stroke="#cbd5e1" stroke-width="2"></path>
+<path class="node-line" d="M 480,200 L 680,320" fill="none" id="path-4" stroke="#cbd5e1" stroke-width="2"></path>
+</svg>
+<!-- Mock Course Grid Layout -->
+<div class="grid grid-cols-4 gap-x-24 gap-y-16 relative z-10">
+<!-- Sem 4 -->
+<div class="space-y-16">
+<div class="text-[10px] font-bold text-outline-variant uppercase mb-4 text-center">Sem 04</div>
+<div class="bg-surface-container-highest border border-secondary p-4 rounded-lg shadow-sm w-44">
+<span class="text-[9px] font-bold text-secondary">MAT-201</span>
+<h4 class="font-label-md leading-tight mt-1">Calculus II</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[10px]">check_circle</span> PASSED
+                                </div>
+</div>
+<div class="bg-surface-container-highest border border-secondary p-4 rounded-lg shadow-sm w-44">
+<span class="text-[9px] font-bold text-secondary">PHY-101</span>
+<h4 class="font-label-md leading-tight mt-1">Physics I</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[10px]">check_circle</span> PASSED
+                                </div>
+</div>
+</div>
+<!-- Sem 5 -->
+<div class="space-y-16">
+<div class="text-[10px] font-bold text-outline-variant uppercase mb-4 text-center">Sem 05 (Current)</div>
+<div class="bg-white border border-primary p-4 rounded-lg shadow-md w-44 transition-all duration-300" id="node-MAT-301">
+<span class="text-[9px] font-bold text-primary">MAT-301</span>
+<h4 class="font-label-md leading-tight mt-1">Advanced Calculus III</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[10px]">pending</span> IN PROGRESS
+                                </div>
+</div>
+<div class="bg-white border border-primary p-4 rounded-lg shadow-md w-44 transition-all duration-300" id="node-PHY-202">
+<span class="text-[9px] font-bold text-primary">PHY-202</span>
+<h4 class="font-label-md leading-tight mt-1">Electromagnetism</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[10px]">pending</span> IN PROGRESS
+                                </div>
+</div>
+</div>
+<!-- Sem 6 -->
+<div class="space-y-16">
+<div class="text-[10px] font-bold text-outline-variant uppercase mb-4 text-center">Sem 06</div>
+<div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg shadow-sm w-44 opacity-60 transition-all duration-300" id="node-MAT-401">
+<span class="text-[9px] font-bold text-on-surface-variant">MAT-401</span>
+<h4 class="font-label-md leading-tight mt-1">Diff. Equations</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px]">lock</span> PENDING PR
+                                </div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg shadow-sm w-44 opacity-60 transition-all duration-300" id="node-PHY-301">
+<span class="text-[9px] font-bold text-on-surface-variant">PHY-301</span>
+<h4 class="font-label-md leading-tight mt-1">Quantum Basics</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px]">lock</span> PENDING PR
+                                </div>
+</div>
+</div>
+<!-- Sem 7 -->
+<div class="space-y-16">
+<div class="text-[10px] font-bold text-outline-variant uppercase mb-4 text-center">Sem 07</div>
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant p-4 rounded-lg shadow-sm w-44 opacity-40 transition-all duration-300" id="node-GRAD">
+<span class="text-[9px] font-bold text-on-surface-variant">PRO-500</span>
+<h4 class="font-label-md leading-tight mt-1">Capstone Project</h4>
+<div class="mt-2 text-[8px] flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px]">school</span> GRADUATION
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Simulation Overlay State -->
+<div class="hidden absolute inset-0 bg-white/40 backdrop-blur-sm z-20 flex items-center justify-center pointer-events-none" id="simulation-overlay">
+<div class="bg-primary text-on-primary px-6 py-3 rounded-full flex items-center gap-3 animate-bounce shadow-2xl">
+<span class="material-symbols-outlined animate-spin">refresh</span>
+<span class="font-label-md">CALCULATING IMPACT...</span>
+</div>
+</div>
+</section>
+</div>
+<div class="fixed bottom-lg right-lg z-[60] flex flex-col items-end gap-sm">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl p-md max-w-[280px] mb-2 hidden group-hover:block animate-in fade-in slide-in-from-bottom-2 duration-300">
+<p class="font-label-md text-primary mb-1">Academic Assistant</p>
+<p class="font-body-md text-on-surface-variant text-xs">Need help understanding how failing Advanced Calculus III impacts your graduation date? Ask me!</p>
+</div>
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group">
+<span class="material-symbols-outlined text-[28px]">smart_toy</span>
+</button>
+</div></main>
+<script>
+        function handleSimChange(select) {
+            const row = select.closest('[data-course-id]');
+            const status = select.value;
+            
+            if (status === 'failed' || status === 'cancelled') {
+                row.classList.add('bg-error-container/20', 'border-error');
+                row.classList.remove('bg-white', 'border-outline-variant');
+            } else {
+                row.classList.remove('bg-error-container/20', 'border-error');
+                row.classList.add('bg-white', 'border-outline-variant');
+            }
+        }
+
+        function executeSimulation() {
+            const overlay = document.getElementById('simulation-overlay');
+            const legend = document.getElementById('alert-legend');
+            const gradDate = document.getElementById('grad-date');
+            
+            // Show calculation animation
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                legend.classList.remove('hidden');
+                
+                // Trigger Visual Changes on Graph
+                const nodesToBlock = ['node-MAT-401', 'node-PHY-301', 'node-GRAD'];
+                const pathsToRed = ['path-1', 'path-2', 'path-3', 'path-4'];
+                const mat301 = document.getElementById('node-MAT-301');
+                
+                // Highlight cause
+                mat301.classList.add('border-error', 'bg-error-container');
+                mat301.querySelector('.material-symbols-outlined').innerText = 'error';
+                mat301.querySelector('.text-primary').innerText = 'FAILED';
+                mat301.querySelector('.text-primary').classList.replace('text-primary', 'text-error');
+
+                nodesToBlock.forEach(id => {
+                    const node = document.getElementById(id);
+                    node.classList.add('border-error', 'bg-error-container', 'opacity-100');
+                    node.classList.remove('opacity-60', 'opacity-40');
+                    node.querySelector('.material-symbols-outlined').innerText = 'block';
+                    node.querySelector('.material-symbols-outlined').classList.add('text-error');
+                    node.querySelector('h4').classList.add('text-error');
+                });
+
+                pathsToRed.forEach(id => {
+                    document.getElementById(id).setAttribute('stroke', '#ba1a1a');
+                    document.getElementById(id).setAttribute('stroke-width', '4');
+                });
+
+                // Update Forecast
+                gradDate.innerText = 'December 2026';
+                gradDate.classList.add('text-error');
+                const gradSub = gradDate.nextElementSibling;
+                gradSub.classList.replace('text-secondary', 'text-error');
+                gradSub.innerHTML = `<span class="material-symbols-outlined text-[14px]">warning</span> Delayed by 1 semester`;
+
+            }, 800);
+        }
+    </script>
+</body></html>

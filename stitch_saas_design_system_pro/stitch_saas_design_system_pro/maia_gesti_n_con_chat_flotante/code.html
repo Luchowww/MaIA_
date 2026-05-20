@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .graph-blur {
+            filter: blur(4px) grayscale(20%);
+            pointer-events: none;
+            user-select: none;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom Scrollbar for the side panel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#d3e4fe",
+                      "secondary": "#006c49",
+                      "tertiary": "#140900",
+                      "secondary-fixed": "#6ffbbe",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "secondary-fixed-dim": "#4edea3",
+                      "primary-container": "#1e1b4b",
+                      "on-secondary-container": "#00714d",
+                      "surface-dim": "#cbdbf5",
+                      "error-container": "#ffdad6",
+                      "on-secondary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed": "#2a1700",
+                      "on-background": "#0b1c30",
+                      "tertiary-container": "#331d00",
+                      "inverse-surface": "#213145",
+                      "on-surface": "#0b1c30",
+                      "on-tertiary": "#ffffff",
+                      "surface": "#f8f9ff",
+                      "surface-container": "#e5eeff",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#8683ba",
+                      "on-primary-fixed": "#181445",
+                      "tertiary-fixed": "#ffddb8",
+                      "on-primary-fixed-variant": "#444173",
+                      "surface-tint": "#5b598c",
+                      "primary-fixed": "#e3dfff",
+                      "on-tertiary-container": "#c07a00",
+                      "on-secondary-fixed": "#002113",
+                      "on-surface-variant": "#47464f",
+                      "outline-variant": "#c8c5d0",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#d3e4fe",
+                      "outline": "#787680",
+                      "secondary-container": "#6cf8bb",
+                      "inverse-on-surface": "#eaf1ff",
+                      "background": "#f8f9ff",
+                      "surface-container-high": "#dce9ff",
+                      "surface-bright": "#f8f9ff",
+                      "primary-fixed-dim": "#c4c1fb",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#005236",
+                      "primary": "#070235",
+                      "surface-container-low": "#eff4ff",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "inverse-primary": "#c4c1fb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "sidebar_width": "280px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "xl": "32px",
+                      "lg": "24px",
+                      "gutter": "24px",
+                      "container_max": "1440px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "headline-sm": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "code-display": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "1", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "code-display": ["13px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-fixed-dim selection:text-primary">
+<div class="flex min-h-screen overflow-hidden">
+<!-- SideNavBar Shared Component -->
+<aside class="w-[280px] h-screen sticky left-0 top-0 flex flex-col h-full border-r border-outline-variant bg-surface shrink-0 z-50">
+<div class="p-lg flex flex-col gap-xs">
+<div class="flex items-center gap-3 mb-md">
+<img alt="University Crest" class="w-10 h-10 rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_bV8qVYY7aM8I91uzds7ET3cVYQCWr1tMpCRFOOmve-95WyDtify4fb1AtjBa1LECOfmI9154vTHSJ3KR7U5e0WSZxK06B_26VWzY0jib7xtvdp41wV199mziUyjhi_RpdTtnGhUJwTmwLwUSz3pVa4zawNpCwuJGuDmjAictyfiRL3u90t1JISjHOTpYIRVzFBdf0NkzKdFt2CwVHE28jm-9SBeEIYrEW0LJTX3x6bbYYN40HdoDdHykUb_NudpU_bWnX09zE1hw"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EduPortal</h1>
+<p class="text-on-surface-variant font-label-md text-label-md">Academic Management</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-sm">
+<!-- Navigation Tabs Mapping -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-highest rounded-r-lg group" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-body-md text-body-md">Curriculum Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">biotech</span>
+<span class="font-body-md text-body-md">Simulation Lab</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">forum</span>
+<span class="font-body-md text-body-md">AI Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="p-lg border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 px-lg py-sm bg-primary text-on-primary rounded-lg font-label-md hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">person</span>
+                    Academic Advisor
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 relative flex flex-col overflow-hidden">
+<!-- TopNavBar Shared Component -->
+<header class="bg-surface shadow-sm h-16 flex justify-between items-center w-full px-lg sticky top-0 z-40">
+<div class="flex items-center gap-md flex-1">
+<h2 class="font-headline-md text-headline-md font-extrabold text-primary">Academic Dashboard</h2>
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:outline-none focus:border-primary transition-all" placeholder="Search courses, professors, or records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md ml-lg">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-low p-1 rounded-full transition-all pr-4">
+<img alt="Student Portrait" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD89wk7c_F2eJLOQIDSoMue4z_2S_SUzE9dgWeWpxxcX96elP10N_NFDANLWKlao7BGubvCBud7kpZwgdpMrBqQEuo51hZPDLRpzf-EC3Jpajn860OjPI4oUOITC9H0uam0mcSr3FcM1jigWt3DLKHhF9wTwXmVq4-boypgb85Uu11EHXOXQ1wwz9B-0C4PuR_y0oRAyFrqLqKhAotbX-_t-rjmF13oCSHMW2r9f_dZygNTKg33hoqtLYJ2l8toQ52k-TsKYG2SO7z_"/>
+<span class="font-label-md text-label-md text-on-surface hidden lg:block">Julian Alarcón</span>
+</div>
+</div>
+</header>
+<!-- Canvas Area (Curriculum Graph) -->
+<div class="flex-1 relative bg-surface-container-lowest overflow-hidden">
+<!-- Background Blurred Graph Simulation -->
+<div class="absolute inset-0 p-xl overflow-hidden graph-blur flex items-center justify-center">
+<div class="grid grid-cols-5 gap-xl w-full h-full opacity-30 pointer-events-none">
+<!-- Simulated Course Nodes (Background) -->
+<div class="flex flex-col gap-lg">
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+<div class="h-24 w-full bg-secondary-container rounded-lg border border-secondary p-md"></div>
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+</div>
+<div class="flex flex-col gap-lg pt-12">
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+<div class="h-24 w-full border-2 border-primary ring-4 ring-primary/20 bg-surface rounded-lg p-md"></div>
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+</div>
+<div class="flex flex-col gap-lg">
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+</div>
+<div class="flex flex-col gap-lg pt-24">
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+</div>
+<div class="flex flex-col gap-lg">
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+<div class="h-24 w-full bg-surface-container rounded-lg border border-outline-variant p-md"></div>
+</div>
+</div>
+<!-- Connection Lines Simulation -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
+<line stroke="#47464f" stroke-dasharray="4" stroke-width="2" x1="20%" x2="40%" y1="50%" y2="50%"></line>
+<line stroke="#47464f" stroke-width="2" x1="40%" x2="60%" y1="50%" y2="40%"></line>
+</svg>
+</div>
+<!-- Right Side Panel (Selected Course) -->
+<div class="absolute right-0 top-0 bottom-0 w-full md:w-[420px] glass-panel border-l border-outline-variant shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+<!-- Panel Header -->
+<div class="p-lg flex justify-between items-start border-b border-outline-variant">
+<div>
+<span class="px-2 py-1 bg-primary text-on-primary rounded text-[10px] font-bold uppercase tracking-wider mb-2 inline-block">C-MAT102</span>
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Cálculo Diferencial</h3>
+</div>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-all" onclick="this.closest('.glass-panel').classList.add('hidden')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Panel Content -->
+<div class="flex-1 overflow-y-auto p-lg custom-scrollbar space-y-xl">
+<!-- Main Stats -->
+<div class="grid grid-cols-2 gap-md">
+<div class="p-md bg-surface-container rounded-xl border border-outline-variant">
+<span class="block text-on-surface-variant font-label-md text-label-md uppercase mb-1">Créditos</span>
+<span class="block font-headline-sm text-headline-sm text-primary">4.0 AC</span>
+</div>
+<div class="p-md bg-surface-container rounded-xl border border-outline-variant">
+<span class="block text-on-surface-variant font-label-md text-label-md uppercase mb-1">Carga Horaria</span>
+<span class="block font-headline-sm text-headline-sm text-primary">64h / Sem</span>
+</div>
+</div>
+<!-- Status Selector Section -->
+<div class="space-y-md">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Selector de Estado</label>
+<div class="grid grid-cols-2 gap-sm">
+<!-- Aprobada -->
+<button class="flex items-center gap-3 p-3 bg-secondary-container border border-secondary text-on-secondary-container rounded-lg transition-all ring-offset-2 hover:ring-2 hover:ring-secondary/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-md text-label-md">Aprobada</span>
+</button>
+<!-- En Curso -->
+<button class="flex items-center gap-3 p-3 bg-surface border border-outline-variant text-on-surface-variant rounded-lg hover:border-primary transition-all">
+<span class="material-symbols-outlined">pending</span>
+<span class="font-label-md text-label-md">En Curso</span>
+</button>
+<!-- Pendiente -->
+<button class="flex items-center gap-3 p-3 bg-surface border border-outline-variant text-on-surface-variant rounded-lg hover:border-primary transition-all">
+<span class="material-symbols-outlined">hourglass_empty</span>
+<span class="font-label-md text-label-md">Pendiente</span>
+</button>
+<!-- Reprobada -->
+<button class="flex items-center gap-3 p-3 bg-surface border border-outline-variant text-on-surface-variant rounded-lg hover:border-primary transition-all">
+<span class="material-symbols-outlined text-error">cancel</span>
+<span class="font-label-md text-label-md">Reprobada</span>
+</button>
+</div>
+</div>
+<!-- Prerequisites -->
+<div class="space-y-md">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Prerrequisitos</label>
+<div class="space-y-sm">
+<div class="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-lg group hover:border-primary transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div>
+<span class="block font-label-md text-label-md text-primary">C-MAT101</span>
+<span class="block font-body-md text-body-md">Matemáticas Básicas</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary">arrow_forward_ios</span>
+</div>
+<p class="text-on-surface-variant font-label-sm text-label-sm italic px-2">Requiere completar 15 créditos del primer núcleo para habilitar nivel 2.</p>
+</div>
+</div>
+<!-- Course Description / Image -->
+<div class="space-y-md">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Resumen de Contenido</label>
+<div class="relative h-40 rounded-xl overflow-hidden mb-md group">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent z-10"></div>
+<img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A macro scientific photography of abstract mathematical patterns and fractal geometry with intricate details. The scene uses deep navy and electric teal colors to represent high-level calculus and analytical thinking. The lighting is focused and dramatic, highlighting the complexity of the equations manifested in nature. The style is modern, professional, and academically rigorous." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu9ok8GqYec56D3qiBjXM_VjyX0Mi1XoGDN917jlQWm9a7VxD-90XOPME23k-rg4KU2rdJLcXUMFSf7hrfY-AQos93udeTOVEeqg84LSs6CepgpqBpgvU777h-qsiB8xYGaZVW3HRtrtcyJ0eBPxRYVscFjPObW4Jgh9PFd_2JKiDrEvVW_EbfhsuFCjMJeOTrYsNDaJsndCsjpI-yGHERX-vhGssIPDFe9Av1vCJsK01PwChfOE6dPzsSg9reT3Pt2H9qaa1kzyJ3"/>
+<div class="absolute bottom-3 left-3 z-20">
+<span class="text-white font-label-md text-label-md">Unidad 1: Límites y Continuidad</span>
+</div>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                                El cálculo diferencial es una parte del cálculo infinitesimal y del análisis matemático que estudia cómo cambian las funciones continuas según sus variables cambian de estado. El principal objeto de estudio en el cálculo diferencial es la derivada.
+                            </p>
+</div>
+</div>
+<!-- Panel Footer -->
+<div class="p-lg bg-surface border-t border-outline-variant flex flex-col gap-sm">
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">edit</span>
+                            Registrar Calificación
+                        </button>
+<button class="w-full py-3 bg-surface-container-high text-on-surface-variant rounded-lg font-bold hover:bg-surface-container-highest transition-all">
+                            Ver Programa Extendido
+                        </button>
+</div>
+</div>
+<!-- Floating Toolbar for Canvas -->
+<div class="absolute left-lg bottom-lg flex flex-col gap-sm z-30">
+<button class="w-12 h-12 bg-white border border-outline-variant rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="w-12 h-12 bg-white border border-outline-variant rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<button class="w-12 h-12 bg-white border border-outline-variant rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined">center_focus_strong</span>
+</button>
+</div>
+</div>
+<div class="fixed bottom-lg right-lg z-[60] flex flex-col items-end pointer-events-none md:mr-[420px] transition-all duration-300">
+<div class="pointer-events-auto bg-primary text-on-primary p-4 rounded-2xl shadow-2xl flex items-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all group">
+<div class="relative">
+<span class="material-symbols-outlined text-2xl">chat</span>
+<span class="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full border-2 border-primary"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-[10px] uppercase opacity-80 leading-none">Asistente Académico</span>
+<span class="font-body-md font-semibold leading-tight">¿Necesitas ayuda?</span>
+</div>
+<span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div></main>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple function to handle status toggle visual feedback
+        document.querySelectorAll('.glass-panel button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(this.innerText.includes('Aprobada') || this.innerText.includes('En Curso')) {
+                    // Logic for status switching would go here
+                    console.log("Status changed to: " + this.innerText.trim());
+                }
+            });
+        });
+
+        // Close panel logic
+        function closePanel() {
+            const panel = document.querySelector('.glass-panel');
+            const mainContent = document.querySelector('.graph-blur');
+            panel.classList.add('translate-x-full');
+            panel.classList.add('opacity-0');
+            mainContent.classList.remove('graph-blur');
+        }
+    </script>
+</body></html>
