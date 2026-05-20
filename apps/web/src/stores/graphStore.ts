@@ -17,8 +17,59 @@ export interface CourseNodeData {
   status: CourseStatus
 }
 
+export interface SemesterHeaderData {
+  label: string
+}
+
+const CARD_W = 190
+const CARD_H = 115
+const COL_GAP = 72
+const ROW_GAP = 16
+
+function layoutNodes(
+  rawNodes: Node<CourseNodeData>[],
+): Node[] {
+  // Group by semester, preserve order
+  const bySem: Record<number, Node<CourseNodeData>[]> = {}
+  rawNodes.forEach((n) => {
+    const s = n.data.semester
+    if (!bySem[s]) bySem[s] = []
+    bySem[s].push(n)
+  })
+
+  const semesters = Object.keys(bySem).map(Number).sort((a, b) => a - b)
+
+  // Course nodes with computed positions
+  const positionedCourses: Node<CourseNodeData>[] = rawNodes.map((n) => {
+    const s = n.data.semester
+    const idx = bySem[s].findIndex((x) => x.id === n.id)
+    const colIndex = semesters.indexOf(s)
+    return {
+      ...n,
+      type: 'courseNode',
+      position: {
+        x: colIndex * (CARD_W + COL_GAP),
+        y: 56 + idx * (CARD_H + ROW_GAP),
+      },
+    }
+  })
+
+  // Semester header nodes (non-interactive)
+  const headerNodes: Node<SemesterHeaderData>[] = semesters.map((s, i) => ({
+    id: `sem-header-${s}`,
+    type: 'semesterHeader',
+    position: { x: i * (CARD_W + COL_GAP), y: 0 },
+    data: { label: `Semestre ${s}` },
+    selectable: false,
+    draggable: false,
+    connectable: false,
+  }))
+
+  return [...headerNodes, ...positionedCourses]
+}
+
 interface GraphState {
-  nodes: Node<CourseNodeData>[]
+  nodes: Node[]
   edges: Edge[]
   simulationMode: boolean
   selectedCourseId: string | null
@@ -35,7 +86,10 @@ export const useGraphStore = create<GraphState>((set) => ({
   simulationMode: false,
   selectedCourseId: null,
 
-  setGraph: (nodes, edges) => set({ nodes, edges }),
+  setGraph: (rawNodes, edges) => {
+    const nodes = layoutNodes(rawNodes)
+    set({ nodes, edges })
+  },
 
   updateNodeStatus: (courseId, status) =>
     set((state) => ({

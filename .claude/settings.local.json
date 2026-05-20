@@ -1,7 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -m venv .venv)"
+      "Bash(python -m venv .venv)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npm install:*)",
+      "Bash(node_modules/.bin/vite build:*)",
+      "Bash(python3 -c \"import venv\")",
+      "Bash(/Users/orlandopalma/Documents/GitHub/MaIA_/apps/api/.venv/Scripts/python.exe -c \"import fastapi; print\\(''fastapi ok''\\)\")",
+      "Bash(/Users/orlandopalma/Documents/GitHub/MaIA_/apps/api/.venv/bin/python -c \"import fastapi; print\\(''fastapi ok''\\)\")",
+      "Bash(python3 -m venv apps/api/.venv --clear)",
+      "Bash(apps/api/.venv/bin/python -m pip install -r apps/api/requirements.txt)",
+      "Bash(python3.12 --version)",
+      "Bash(python3.11 --version)",
+      "Read(//opt/homebrew/**)",
+      "Bash(/dev/null -name python3.* -type f)",
+      "Bash(brew install:*)",
+      "Bash(npm run:*)",
+      "Bash(ls /opt/homebrew/bin/python*)"
     ]
   }
 }
