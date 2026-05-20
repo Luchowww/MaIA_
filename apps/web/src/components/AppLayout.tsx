@@ -7,11 +7,12 @@ import {
   GraduationCap,
   Bell,
   Search,
+  GitCompare,
   ShieldCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
-export type Page = 'dashboard' | 'graph' | 'simulation' | 'chat' | 'settings' | 'admin'
+export type Page = 'dashboard' | 'graph' | 'simulation' | 'scenarios' | 'chat' | 'settings' | 'admin'
 
 interface Props {
   currentPage: Page
@@ -24,6 +25,7 @@ const BASE_NAV: { id: Page; label: string; icon: React.ElementType }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'graph', label: 'Curriculum Graph', icon: Network },
   { id: 'simulation', label: 'Simulation Lab', icon: FlaskConical },
+  { id: 'scenarios', label: 'Escenarios', icon: GitCompare },
   { id: 'chat', label: 'AI Chat', icon: MessageSquare },
   { id: 'settings', label: 'Settings', icon: Settings },
 ]

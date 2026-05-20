@@ -4,10 +4,10 @@ from enum import Enum as PyEnum
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    BigInteger, Boolean, DateTime, ForeignKey,
+    BigInteger, Boolean, DateTime, ForeignKey, Integer,
     String, Text, UniqueConstraint, func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -120,3 +120,22 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SimulationScenario(Base):
+    __tablename__ = "simulation_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id: Mapped[str] = mapped_column(String, nullable=False)
+    program_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("programs.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    triggered_course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
+    # {course_id (str): semester (int)} — snapshot of all affected courses
+    course_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    affected_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Extra semesters of delay caused by this loss
+    estimated_semesters: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    program: Mapped["Program"] = relationship("Program")
+    triggered_course: Mapped["Course"] = relationship("Course", foreign_keys=[triggered_course_id])
