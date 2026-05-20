@@ -36,7 +36,7 @@ export default function GraphPage() {
 
   const { data: programs } = useQuery<Program[]>({
     queryKey: ['programs'],
-    queryFn: () => api.get('/admin/programs').then((r) => r.data),
+    queryFn: () => api.get('/programs').then((r) => r.data),
   })
 
   // Auto-select first active program

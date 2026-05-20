@@ -11,6 +11,19 @@ from models import Course, Prerequisite, StudentCourse
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
+programs_router = APIRouter(prefix="/programs", tags=["programs"])
+
+
+@programs_router.get("")
+async def list_programs_public(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    from models import Program
+    from sqlalchemy import select as sa_select
+    result = await db.execute(sa_select(Program).where(Program.is_active == True).order_by(Program.name))
+    return result.scalars().all()
+
 
 @router.get("")
 async def list_courses(

@@ -27,7 +27,7 @@ export default function DashboardPage({ onNavigate }: Props) {
 
   const { data: programs } = useQuery<Program[]>({
     queryKey: ['programs'],
-    queryFn: () => api.get('/admin/programs').then((r) => r.data),
+    queryFn: () => api.get('/programs').then((r) => r.data),
   })
 
   const activePrograms = programs?.filter((p) => p.is_active) ?? []
