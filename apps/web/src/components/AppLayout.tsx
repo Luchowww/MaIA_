@@ -9,7 +9,6 @@ import {
   Search,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { supabase } from '@/lib/supabase'
 
 export type Page = 'dashboard' | 'graph' | 'simulation' | 'chat' | 'settings'
 
@@ -30,10 +29,6 @@ const NAV_ITEMS: { id: Page; label: string; icon: React.ElementType }[] = [
 
 export default function AppLayout({ currentPage, onNavigate, children, pageTitle }: Props) {
   const { user } = useAuthStore()
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-  }
 
   const displayName = user?.email?.split('@')[0] ?? 'Usuario'
 
@@ -110,8 +105,8 @@ export default function AppLayout({ currentPage, onNavigate, children, pageTitle
 
           {/* Avatar */}
           <button
-            onClick={handleLogout}
-            title="Cerrar sesión"
+            onClick={() => onNavigate('settings')}
+            title="Cuenta"
             className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold hover:bg-indigo-700 transition-colors uppercase"
           >
             {displayName.slice(0, 2)}

@@ -3,10 +3,14 @@ import { supabase } from '@/lib/supabase'
 import { LogOut, User, Shield } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { user } = useAuthStore()
+  const { user, clear } = useAuthStore()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+    } finally {
+      clear()
+    }
   }
 
   return (
