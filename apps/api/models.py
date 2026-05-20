@@ -13,6 +13,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
 
+class UserRole(str, PyEnum):
+    admin = "admin"
+    student = "student"
+
+
 class CourseStatus(str, PyEnum):
     approved = "approved"
     in_progress = "in_progress"
@@ -20,6 +25,16 @@ class CourseStatus(str, PyEnum):
     blocked = "blocked"
     failed = "failed"
     simulated = "simulated"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)  # Supabase UUID (sub claim)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role: Mapped[UserRole] = mapped_column(String(20), default=UserRole.student)
+    is_onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Program(Base):

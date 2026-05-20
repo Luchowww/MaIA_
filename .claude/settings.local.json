@@ -17,7 +17,8 @@
       "Bash(/dev/null -name python3.* -type f)",
       "Bash(brew install:*)",
       "Bash(npm run:*)",
-      "Bash(ls /opt/homebrew/bin/python*)"
+      "Bash(ls /opt/homebrew/bin/python*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
