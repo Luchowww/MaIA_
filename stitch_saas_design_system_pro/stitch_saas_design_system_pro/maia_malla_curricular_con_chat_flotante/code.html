@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .graph-canvas {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .connection-line {
+            stroke-dasharray: 4;
+            animation: dash 20s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -1000; }
+        }
+        .node-active {
+            filter: drop-shadow(0 0 8px rgba(30, 27, 75, 0.2));
+            z-index: 50;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary": "#006c49",
+                        "tertiary": "#140900",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-container": "#1e1b4b",
+                        "on-secondary-container": "#00714d",
+                        "surface-dim": "#cbdbf5",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-background": "#0b1c30",
+                        "tertiary-container": "#331d00",
+                        "inverse-surface": "#213145",
+                        "on-surface": "#0b1c30",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#8683ba",
+                        "on-primary-fixed": "#181445",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary-fixed-variant": "#444173",
+                        "surface-tint": "#5b598c",
+                        "primary-fixed": "#e3dfff",
+                        "on-tertiary-container": "#c07a00",
+                        "on-secondary-fixed": "#002113",
+                        "on-surface-variant": "#47464f",
+                        "outline-variant": "#c8c5d0",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d3e4fe",
+                        "outline": "#787680",
+                        "secondary-container": "#6cf8bb",
+                        "inverse-on-surface": "#eaf1ff",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "surface-bright": "#f8f9ff",
+                        "primary-fixed-dim": "#c4c1fb",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary": "#070235",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "inverse-primary": "#c4c1fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "sidebar_width": "280px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "container_max": "1440px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "code-display": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "1", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "code-display": ["13px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<div class="flex h-screen overflow-hidden">
+<!-- SideNavBar (Predicted & Required) -->
+<aside class="w-[280px] h-screen sticky left-0 top-0 flex flex-col bg-surface border-r border-outline-variant z-50">
+<div class="p-lg flex flex-col gap-xs">
+<div class="flex items-center gap-3">
+<img class="rounded-lg" data-alt="A stylized heraldic university crest featuring a shield with an open book and a torch of knowledge, rendered in a modern clean vector style using deep navy and gold accents against a clean white background. The lighting is even and academic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAkmdWt2v4UeK0UT3DO8CClu0pXZdihLw3gBtNNoLVtqWla_lyyws6sUvVId-3LjTh0NSH9xz-rJxqr1GsQvqVJzwNfTBj2D7BEts2VZ_OAFH0hUVsf_SSqpSIUzeRPb5poMT-hqBpy0slcWPu8rQIzmpidyedzb6-aYXRq32yeafos_bbntsLffChhGpsmKGch9_k6Ke7p-qMd8PGB2KXwaphZzzUinphh_hdvq3_gHkhSKIvCnwkDWRPalbwCGIef50O9dSnoyQA"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">EduPortal</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 mt-md px-sm">
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-primary text-primary font-bold bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-body-md text-body-md">Curriculum Graph</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">biotech</span>
+<span class="font-body-md text-body-md">Simulation Lab</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-body-md text-body-md">AI Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<div class="p-lg border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-label-md transition-all active:scale-95">
+<span class="material-symbols-outlined">support_agent</span>
+                    Academic Advisor
+                </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col relative">
+<!-- TopNavBar (Predicted & Required) -->
+<header class="bg-surface shadow-sm h-16 flex justify-between items-center w-full px-lg z-40">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-sm text-headline-sm text-primary">Malla Curricular: Ing. Sistemas</h2>
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:outline-none focus:border-primary" placeholder="Buscar materia..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-all rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-3 pl-md border-l border-outline-variant">
+<div class="text-right">
+<p class="font-label-md text-primary">Juan Pérez</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider">7mo Semestre</p>
+</div>
+<img alt="Student Portrait" class="w-10 h-10 rounded-full border border-outline-variant" data-alt="Close-up professional portrait of a university student with a confident smile, wearing a modern casual blazer. The background is a soft-focus library setting with warm, ambient lighting that complements the corporate modern UI aesthetic. The color palette includes soft blues and grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7yetLbdXftpjqXgRs8iTeIpKW_yUdV8tHbqe4CU6ArbMpH32f8eFY2WpalDpFsCHY98w3MLLCHZIkNb4I-7QFwTp3Ifk5GF1GZRCooLwVhxQiD55OL3WZx-z1naIJkmwHlRNW1l_KN0KQn7b3hOHMFrebfkEZNKChuy_JDdiz_I3BuRJPKl5GQAGGXg5dxoMDTQ3M8r-kU_q0E8zhXjPwV6FSpjTumkxEFLC925JbZ2GVve1lKdYjJHcq6-2hH1rUMcWf97J9cV5G"/>
+</div>
+</div>
+</header>
+<!-- Interactive Canvas -->
+<div class="flex-1 relative overflow-hidden bg-background graph-canvas" id="canvas-container">
+<!-- SVG layer for connection lines -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" id="connections-svg">
+<defs>
+<marker id="arrowhead" markerheight="7" markerwidth="10" orient="auto" refx="9" refy="3.5">
+<polygon fill="#94a3b8" points="0 0, 10 3.5, 0 7"></polygon>
+</marker>
+</defs>
+<!-- Lines will be dynamically updated or pre-rendered here -->
+<path class="connection-line stroke-secondary" d="M 320 200 L 600 200" fill="none" marker-end="url(#arrowhead)" stroke-width="2"></path>
+<path class="connection-line stroke-outline" d="M 320 350 L 600 350" fill="none" marker-end="url(#arrowhead)" stroke-width="2"></path>
+<path class="connection-line stroke-outline" d="M 320 500 L 600 350" fill="none" marker-end="url(#arrowhead)" stroke-width="2"></path>
+</svg>
+<div class="absolute inset-0 p-xl flex gap-12 overflow-x-auto select-none" id="draggable-canvas">
+<!-- Semester Column 1 -->
+<div class="flex flex-col gap-8 min-w-[280px]">
+<div class="flex items-center gap-2 pb-4 border-b border-outline-variant">
+<span class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs">01</span>
+<h3 class="font-label-md text-on-surface">PRIMER SEMESTRE</h3>
+</div>
+<!-- Course Node: Aprobada -->
+<div class="bg-white border border-secondary p-4 rounded-lg shadow-sm group hover:scale-105 transition-transform cursor-pointer relative" onclick="highlightPath(this)">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-display text-secondary">MAT-101</span>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">APROBADA</span>
+</div>
+<h4 class="font-headline-sm text-[16px] text-primary mb-3">Cálculo Diferencial</h4>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="text-xs font-medium">5 Créditos</span>
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+</div>
+<!-- Course Node: Aprobada -->
+<div class="bg-white border border-secondary p-4 rounded-lg shadow-sm group hover:scale-105 transition-transform cursor-pointer relative">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-display text-secondary">SIS-110</span>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold">APROBADA</span>
+</div>
+<h4 class="font-headline-sm text-[16px] text-primary mb-3">Programación I</h4>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="text-xs font-medium">6 Créditos</span>
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Semester Column 2 -->
+<div class="flex flex-col gap-8 min-w-[280px]">
+<div class="flex items-center gap-2 pb-4 border-b border-outline-variant">
+<span class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs">02</span>
+<h3 class="font-label-md text-on-surface">SEGUNDO SEMESTRE</h3>
+</div>
+<!-- Course Node: En Curso -->
+<div class="bg-white border border-on-tertiary-container p-4 rounded-lg shadow-sm group hover:scale-105 transition-transform cursor-pointer relative">
+<div class="absolute top-0 left-0 w-1 h-full bg-on-tertiary-container rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-display text-on-tertiary-container">MAT-102</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded text-[10px] font-bold">EN CURSO</span>
+</div>
+<h4 class="font-headline-sm text-[16px] text-primary mb-3">Cálculo Integral</h4>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="text-xs font-medium">5 Créditos</span>
+<span class="material-symbols-outlined text-sm animate-pulse">pending</span>
+</div>
+</div>
+<!-- Course Node: Pendiente -->
+<div class="bg-white border border-outline-variant p-4 rounded-lg shadow-sm group hover:scale-105 transition-transform cursor-pointer relative">
+<div class="absolute top-0 left-0 w-1 h-full bg-outline rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-display text-on-surface-variant">SIS-120</span>
+<span class="bg-surface-container text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold">PENDIENTE</span>
+</div>
+<h4 class="font-headline-sm text-[16px] text-primary mb-3">Estructuras de Datos</h4>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="text-xs font-medium">6 Créditos</span>
+<span class="material-symbols-outlined text-sm">lock_open</span>
+</div>
+</div>
+</div>
+<!-- Semester Column 3 -->
+<div class="flex flex-col gap-8 min-w-[280px]">
+<div class="flex items-center gap-2 pb-4 border-b border-outline-variant">
+<span class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs">03</span>
+<h3 class="font-label-md text-on-surface">TERCER SEMESTRE</h3>
+</div>
+<!-- Course Node: Bloqueada -->
+<div class="bg-surface-container-low border border-error/30 p-4 rounded-lg shadow-sm grayscale opacity-70 group cursor-not-allowed relative">
+<div class="absolute top-0 left-0 w-1 h-full bg-error rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-display text-error">SIS-210</span>
+<span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-[10px] font-bold">BLOQUEADA</span>
+</div>
+<h4 class="font-headline-sm text-[16px] text-primary mb-3">Bases de Datos I</h4>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="text-xs font-medium">5 Créditos</span>
+<span class="material-symbols-outlined text-sm text-error">block</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Zoom & Pan Controls (Bottom-right Anchor) -->
+<div class="absolute bottom-lg right-lg flex flex-col gap-2 z-30">
+<div class="flex flex-col bg-surface shadow-xl rounded-lg border border-outline-variant p-1">
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-primary" title="Zoom In">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<hr class="border-outline-variant my-1"/>
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-primary" title="Zoom Out">
+<span class="material-symbols-outlined">zoom_out</span>
+</button>
+<hr class="border-outline-variant my-1"/>
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-primary" title="Center View">
+<span class="material-symbols-outlined">filter_center_focus</span>
+</button>
+</div>
+<button class="p-3 bg-primary text-white shadow-xl rounded-full hover:bg-primary-container transition-all active:scale-95" title="Pan Mode">
+<span class="material-symbols-outlined">pan_tool</span>
+</button>
+</div>
+<!-- Legend (Bottom-left Anchor) -->
+<div class="absolute bottom-lg left-lg bg-surface/90 backdrop-blur-md p-md rounded-xl border border-outline-variant shadow-lg z-30 max-w-[200px]">
+<h5 class="font-label-md text-primary mb-sm">ESTADOS</h5>
+<div class="grid grid-cols-1 gap-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="font-body-md text-[11px] text-on-surface-variant">Aprobada</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-on-tertiary-container"></div>
+<span class="font-body-md text-[11px] text-on-surface-variant">En curso</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-outline"></div>
+<span class="font-body-md text-[11px] text-on-surface-variant">Pendiente</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<span class="font-body-md text-[11px] text-on-surface-variant">Bloqueada</span>
+</div>
+</div>
+</div>
+</div>
+<button class="fixed bottom-32 right-lg w-14 h-14 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[60] group" title="Chat with Advisor"><span class="material-symbols-outlined text-2xl">chat</span><span class="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full border-2 border-surface"></span><div class="absolute right-full mr-4 px-3 py-1.5 bg-inverse-surface text-inverse-on-surface text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">¿Necesitas ayuda con tu malla?</div></button></main>
+</div>
+<script>
+        // Micro-interaction: Drag to pan simulation
+        const canvas = document.getElementById('draggable-canvas');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDown = true;
+            canvas.classList.add('cursor-grabbing');
+            startX = e.pageX - canvas.offsetLeft;
+            scrollLeft = canvas.scrollLeft;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDown = false;
+            canvas.classList.remove('cursor-grabbing');
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDown = false;
+            canvas.classList.remove('cursor-grabbing');
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - canvas.offsetLeft;
+            const walk = (x - startX) * 2;
+            canvas.scrollLeft = scrollLeft - walk;
+        });
+
+        // Toggle path highlighting
+        function highlightPath(element) {
+            const allNodes = document.querySelectorAll('.bg-white');
+            allNodes.forEach(n => n.classList.remove('node-active', 'border-primary', 'border-2'));
+            
+            element.classList.add('node-active', 'border-primary', 'border-2');
+        }
+    </script>
+</body></html>
