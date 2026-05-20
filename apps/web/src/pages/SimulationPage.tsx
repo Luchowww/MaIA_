@@ -1,21 +1,25 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { FlaskConical, Calendar, TrendingUp, ChevronDown } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { FlaskConical, Clock, TrendingUp, ChevronDown, Save, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
-import { useGraphStore } from '@/stores/graphStore'
 
 interface Program {
   id: string
   name: string
 }
 
+interface SimulationResult {
+  affected_course_ids: string[]
+  estimated_semesters: number
+}
+
 export default function SimulationPage() {
+  const queryClient = useQueryClient()
   const [programId, setProgramId] = useState<string | null>(null)
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
-  const [simulationResult, setSimulationResult] = useState<{
-    affected_course_ids: string[]
-    graduation_date: string
-  } | null>(null)
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
+  const [scenarioName, setScenarioName] = useState('')
+  const [savedOk, setSavedOk] = useState(false)
 
   const { data: programs } = useQuery<Program[]>({
     queryKey: ['programs'],
@@ -24,18 +28,33 @@ export default function SimulationPage() {
 
   const { data: graphData } = useQuery({
     queryKey: ['graph', programId],
-    queryFn: () =>
-      api.get(`/courses/graph?program_id=${programId}`).then((r) => r.data),
+    queryFn: () => api.get(`/courses/graph?program_id=${programId}`).then((r) => r.data),
     enabled: !!programId,
   })
 
   const nodes = graphData?.nodes ?? []
 
-  const mutation = useMutation({
+  const simulateMutation = useMutation({
     mutationFn: (courseId: string) =>
       api.post('/simulation/loss', { course_id: courseId, program_id: programId }).then((r) => r.data),
-    onSuccess: (data) => {
+    onSuccess: (data: SimulationResult) => {
       setSimulationResult(data)
+      setScenarioName('')
+      setSavedOk(false)
+    },
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.post('/simulation/scenarios', {
+        course_id: selectedCourseId,
+        program_id: programId,
+        name: scenarioName.trim(),
+      }).then((r) => r.data),
+    onSuccess: () => {
+      setSavedOk(true)
+      setScenarioName('')
+      queryClient.invalidateQueries({ queryKey: ['scenarios'] })
     },
   })
 
@@ -45,9 +64,7 @@ export default function SimulationPage() {
     if (!bySemester[s]) bySemester[s] = []
     bySemester[s].push(n)
   })
-  const semesters = Object.keys(bySemester)
-    .map(Number)
-    .sort((a, b) => a - b)
+  const semesters = Object.keys(bySemester).map(Number).sort((a, b) => a - b)
 
   const affectedSet = new Set(simulationResult?.affected_course_ids ?? [])
 
@@ -69,6 +86,8 @@ export default function SimulationPage() {
     simulated: 'Simulada',
   }
 
+  const canSave = simulationResult && scenarioName.trim().length > 0 && !savedOk
+
   return (
     <div className="flex h-full">
       {/* Left panel */}
@@ -78,18 +97,23 @@ export default function SimulationPage() {
             <h2 className="text-sm font-semibold text-slate-900">Simulation Controls</h2>
             <FlaskConical size={16} className="text-slate-400" />
           </div>
-          <p className="text-xs text-slate-500">Select a course to fail or cancel</p>
+          <p className="text-xs text-slate-500">Selecciona una materia para simular su pérdida</p>
         </div>
 
         {/* Program selector */}
         <div className="p-4 border-b border-slate-100">
           <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
-            Program
+            Programa
           </label>
           <div className="relative">
             <select
               value={programId ?? ''}
-              onChange={(e) => { setProgramId(e.target.value); setSimulationResult(null); setSelectedCourseId(null) }}
+              onChange={(e) => {
+                setProgramId(e.target.value)
+                setSimulationResult(null)
+                setSelectedCourseId(null)
+                setSavedOk(false)
+              }}
               className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-8"
             >
               <option value="">Seleccionar programa...</option>
@@ -101,7 +125,7 @@ export default function SimulationPage() {
           </div>
         </div>
 
-        {/* Course list by semester */}
+        {/* Course list */}
         {programId && (
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
             {semesters.map((sem) => (
@@ -116,7 +140,11 @@ export default function SimulationPage() {
                     return (
                       <button
                         key={n.id}
-                        onClick={() => { setSelectedCourseId(isSelected ? null : n.id); setSimulationResult(null) }}
+                        onClick={() => {
+                          setSelectedCourseId(isSelected ? null : n.id)
+                          setSimulationResult(null)
+                          setSavedOk(false)
+                        }}
                         className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
                           isSelected
                             ? 'border-red-300 bg-red-50'
@@ -132,7 +160,7 @@ export default function SimulationPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-slate-900 truncate">{n.data.name}</p>
-                          <p className="text-[10px] text-slate-400">{n.data.credits} cr · PR: {n.data.code}</p>
+                          <p className="text-[10px] text-slate-400">{n.data.credits} cr</p>
                         </div>
                         <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${STATUS_BADGE[n.data.status] ?? 'bg-slate-100 text-slate-500'}`}>
                           {STATUS_LABEL[n.data.status] ?? n.data.status}
@@ -146,20 +174,49 @@ export default function SimulationPage() {
           </div>
         )}
 
-        {/* Graduation forecast */}
+        {/* Impact summary */}
         {simulationResult && (
-          <div className="p-4 border-t border-slate-100 bg-indigo-50">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-slate-600">Graduation Forecast</p>
-              <Calendar size={13} className="text-indigo-500" />
+          <div className="p-4 border-t border-slate-100 bg-amber-50 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-700">Impacto de la simulación</p>
+              <Clock size={13} className="text-amber-500" />
             </div>
-            <p className="text-lg font-bold text-slate-900">{simulationResult.graduation_date}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <TrendingUp size={11} className="text-amber-500" />
-              <p className="text-[11px] text-amber-600 font-medium">
-                {simulationResult.affected_course_ids.length} materias afectadas
-              </p>
+            <div className="flex gap-3">
+              <div className="flex-1 bg-white rounded-lg p-2.5 border border-amber-100 text-center">
+                <p className="text-lg font-bold text-slate-900">{simulationResult.affected_course_ids.length}</p>
+                <p className="text-[10px] text-slate-500">materias afectadas</p>
+              </div>
+              <div className="flex-1 bg-white rounded-lg p-2.5 border border-amber-100 text-center">
+                <p className="text-lg font-bold text-slate-900">+{simulationResult.estimated_semesters}</p>
+                <p className="text-[10px] text-slate-500">semestres de retraso</p>
+              </div>
             </div>
+
+            {/* Save as scenario */}
+            {savedOk ? (
+              <div className="flex items-center gap-2 text-emerald-600 text-xs font-medium">
+                <CheckCircle size={14} />
+                Escenario guardado correctamente
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Nombre del escenario..."
+                  value={scenarioName}
+                  onChange={(e) => setScenarioName(e.target.value)}
+                  className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                />
+                <button
+                  onClick={() => saveMutation.mutate()}
+                  disabled={!canSave || saveMutation.isPending}
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-semibold py-2.5 rounded-lg transition-colors"
+                >
+                  <Save size={13} />
+                  {saveMutation.isPending ? 'Guardando...' : 'Guardar escenario'}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -167,12 +224,12 @@ export default function SimulationPage() {
         {selectedCourseId && (
           <div className="p-4 border-t border-slate-100">
             <button
-              onClick={() => mutation.mutate(selectedCourseId)}
-              disabled={mutation.isPending}
+              onClick={() => simulateMutation.mutate(selectedCourseId)}
+              disabled={simulateMutation.isPending}
               className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
             >
               <FlaskConical size={15} />
-              {mutation.isPending ? 'Calculando...' : 'Run Simulation'}
+              {simulateMutation.isPending ? 'Calculando...' : 'Run Simulation'}
             </button>
           </div>
         )}
@@ -205,6 +262,16 @@ export default function SimulationPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto p-6">
+            {simulationResult && (
+              <div className="mb-4 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
+                <TrendingUp size={13} />
+                <span>
+                  Esta simulación afecta <strong>{simulationResult.affected_course_ids.length} materias</strong> y
+                  genera un retraso estimado de <strong>+{simulationResult.estimated_semesters} semestre(s)</strong>.
+                  Este resultado es temporal — guárdalo como escenario para consultarlo después.
+                </span>
+              </div>
+            )}
             <div className="flex gap-6">
               {semesters.map((sem) => (
                 <div key={sem} className="flex flex-col gap-2 min-w-[180px]">
@@ -227,8 +294,14 @@ export default function SimulationPage() {
                       >
                         <p className="text-[10px] text-slate-400 font-mono">{n.data.code}</p>
                         <p className="text-xs font-semibold text-slate-900 mt-0.5">{n.data.name}</p>
-                        <span className={`inline-block mt-1.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${STATUS_BADGE[isAffected ? 'simulated' : n.data.status] ?? 'bg-slate-100 text-slate-500'}`}>
-                          {isAffected ? 'AFECTADA' : (STATUS_LABEL[n.data.status] ?? n.data.status)}
+                        <span className={`inline-block mt-1.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                          isSelected
+                            ? 'bg-red-100 text-red-700'
+                            : isAffected
+                            ? STATUS_BADGE['simulated']
+                            : (STATUS_BADGE[n.data.status] ?? 'bg-slate-100 text-slate-500')
+                        }`}>
+                          {isSelected ? 'PERDIDA' : isAffected ? 'AFECTADA' : (STATUS_LABEL[n.data.status] ?? n.data.status)}
                         </span>
                       </div>
                     )
