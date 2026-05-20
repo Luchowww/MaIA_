@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { MessageSquare, X, Send, Bot } from 'lucide-react'
 import { api } from '@/lib/api'
+import MarkdownMessage from './MarkdownMessage'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -83,7 +84,10 @@ export default function ChatWidget() {
                       : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm shadow-sm'
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === 'assistant'
+                    ? <MarkdownMessage content={msg.content} compact />
+                    : msg.content
+                  }
                 </div>
               </div>
             ))}

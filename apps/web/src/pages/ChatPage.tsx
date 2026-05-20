@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Send, Bot, User } from 'lucide-react'
 import { api } from '@/lib/api'
+import MarkdownMessage from '@/components/chat/MarkdownMessage'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -84,7 +85,10 @@ export default function ChatPage() {
                 ? 'bg-slate-900 text-white rounded-tr-sm'
                 : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm shadow-sm'
             }`}>
-              {msg.content}
+              {msg.role === 'assistant'
+                ? <MarkdownMessage content={msg.content} />
+                : msg.content
+              }
             </div>
           </div>
         ))}

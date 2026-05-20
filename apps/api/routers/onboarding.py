@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_db_user
 from database import get_db
-from models import Course, StudentCourse, CourseStatus, User
+from models import Course, StudentCourse, StudentProgram, CourseStatus, User
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
@@ -65,6 +65,16 @@ async def submit_onboarding(
             ))
         else:
             sc.status = CourseStatus.approved
+
+    # Enroll student in the program (for dual-program support)
+    existing_sp = await db.execute(
+        select(StudentProgram).where(
+            StudentProgram.student_id == user.id,
+            StudentProgram.program_id == body.program_id,
+        )
+    )
+    if existing_sp.scalar_one_or_none() is None:
+        db.add(StudentProgram(student_id=user.id, program_id=body.program_id))
 
     # Mark user as onboarded
     user.is_onboarded = True
