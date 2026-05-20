@@ -7,6 +7,8 @@ import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import GraphPage from '@/pages/GraphPage'
 import SimulationPage from '@/pages/SimulationPage'
+import ScenariosPage from '@/pages/ScenariosPage'
+import ScenarioComparePage from '@/pages/ScenarioComparePage'
 import ChatPage from '@/pages/ChatPage'
 import SettingsPage from '@/pages/SettingsPage'
 import ChatWidget from '@/components/chat/ChatWidget'
@@ -17,6 +19,7 @@ const PAGE_TITLES: Record<Page, string> = {
   dashboard: 'Academic Dashboard',
   graph: 'Malla Curricular',
   simulation: 'Simulation Lab',
+  scenarios: 'Escenarios de Simulación',
   chat: 'AI Chat',
   settings: 'Settings',
 }
@@ -24,6 +27,7 @@ const PAGE_TITLES: Record<Page, string> = {
 function AppContent() {
   const { session, setSession, clear } = useAuthStore()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
+  const [compareIds, setCompareIds] = useState<string[] | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -43,15 +47,34 @@ function AppContent() {
 
   if (!session) return <LoginPage />
 
+  const handleNavigate = (page: Page) => {
+    setCurrentPage(page)
+    setCompareIds(null)
+  }
+
+  const handleCompare = (ids: string[]) => {
+    setCompareIds(ids)
+    setCurrentPage('scenarios')
+  }
+
   return (
     <AppLayout
       currentPage={currentPage}
-      onNavigate={setCurrentPage}
-      pageTitle={PAGE_TITLES[currentPage]}
+      onNavigate={handleNavigate}
+      pageTitle={compareIds ? 'Comparar escenarios' : PAGE_TITLES[currentPage]}
     >
-      {currentPage === 'dashboard' && <DashboardPage onNavigate={setCurrentPage} />}
+      {currentPage === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
       {currentPage === 'graph' && <GraphPage />}
       {currentPage === 'simulation' && <SimulationPage />}
+      {currentPage === 'scenarios' && !compareIds && (
+        <ScenariosPage onCompare={handleCompare} />
+      )}
+      {currentPage === 'scenarios' && compareIds && (
+        <ScenarioComparePage
+          scenarioIds={compareIds}
+          onBack={() => setCompareIds(null)}
+        />
+      )}
       {currentPage === 'chat' && <ChatPage />}
       {currentPage === 'settings' && <SettingsPage />}
 
