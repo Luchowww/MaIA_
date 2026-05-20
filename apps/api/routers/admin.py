@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth import get_current_user
+from auth import require_admin
 from database import get_db
 from models import Course, Prerequisite, Program
 
@@ -24,13 +24,22 @@ class ProgramUpdate(BaseModel):
 
 
 @router.get("/programs")
-async def list_programs(db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
+async def list_programs(db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
     result = await db.execute(select(Program).order_by(Program.name))
     return result.scalars().all()
 
 
+@router.get("/programs/{program_id}")
+async def get_program(program_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
+    result = await db.execute(select(Program).where(Program.id == program_id))
+    program = result.scalar_one_or_none()
+    if not program:
+        raise HTTPException(status_code=404, detail="Program not found")
+    return program
+
+
 @router.post("/programs", status_code=status.HTTP_201_CREATED)
-async def create_program(body: ProgramCreate, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
+async def create_program(body: ProgramCreate, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
     program = Program(name=body.name)
     db.add(program)
     await db.commit()
@@ -40,7 +49,7 @@ async def create_program(body: ProgramCreate, db: AsyncSession = Depends(get_db)
 
 @router.patch("/programs/{program_id}")
 async def update_program(
-    program_id: uuid.UUID, body: ProgramUpdate, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)
+    program_id: uuid.UUID, body: ProgramUpdate, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)
 ):
     result = await db.execute(select(Program).where(Program.id == program_id))
     program = result.scalar_one_or_none()
@@ -56,7 +65,7 @@ async def update_program(
 
 
 @router.delete("/programs/{program_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_program(program_id: uuid.UUID, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
+async def delete_program(program_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
     result = await db.execute(select(Program).where(Program.id == program_id))
     program = result.scalar_one_or_none()
     if not program:
@@ -85,8 +94,20 @@ class CourseUpdate(BaseModel):
     description: str | None = None
 
 
+@router.get("/courses")
+async def list_courses(
+    program_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_admin),
+):
+    result = await db.execute(
+        select(Course).where(Course.program_id == program_id).order_by(Course.semester, Course.code)
+    )
+    return result.scalars().all()
+
+
 @router.post("/courses", status_code=status.HTTP_201_CREATED)
-async def create_course(body: CourseCreate, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
+async def create_course(body: CourseCreate, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
     course = Course(**body.model_dump())
     db.add(course)
     await db.commit()
@@ -96,7 +117,7 @@ async def create_course(body: CourseCreate, db: AsyncSession = Depends(get_db), 
 
 @router.patch("/courses/{course_id}")
 async def update_course(
-    course_id: uuid.UUID, body: CourseUpdate, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)
+    course_id: uuid.UUID, body: CourseUpdate, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)
 ):
     result = await db.execute(select(Course).where(Course.id == course_id))
     course = result.scalar_one_or_none()
@@ -109,6 +130,16 @@ async def update_course(
     return course
 
 
+@router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_course(course_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
+    result = await db.execute(select(Course).where(Course.id == course_id))
+    course = result.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    await db.delete(course)
+    await db.commit()
+
+
 # --- Prerequisites ---
 
 
@@ -117,9 +148,19 @@ class PrerequisiteCreate(BaseModel):
     prerequisite_course_id: uuid.UUID
 
 
+@router.get("/prerequisites")
+async def list_prerequisites(
+    course_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_admin),
+):
+    result = await db.execute(select(Prerequisite).where(Prerequisite.course_id == course_id))
+    return result.scalars().all()
+
+
 @router.post("/prerequisites", status_code=status.HTTP_201_CREATED)
 async def create_prerequisite(
-    body: PrerequisiteCreate, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)
+    body: PrerequisiteCreate, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)
 ):
     prereq = Prerequisite(**body.model_dump())
     db.add(prereq)
@@ -130,7 +171,7 @@ async def create_prerequisite(
 
 @router.delete("/prerequisites/{prereq_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_prerequisite(
-    prereq_id: uuid.UUID, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)
+    prereq_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)
 ):
     result = await db.execute(select(Prerequisite).where(Prerequisite.id == prereq_id))
     prereq = result.scalar_one_or_none()

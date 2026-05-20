@@ -7,10 +7,11 @@ import {
   GraduationCap,
   Bell,
   Search,
+  ShieldCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
-export type Page = 'dashboard' | 'graph' | 'simulation' | 'chat' | 'settings'
+export type Page = 'dashboard' | 'graph' | 'simulation' | 'chat' | 'settings' | 'admin'
 
 interface Props {
   currentPage: Page
@@ -19,7 +20,7 @@ interface Props {
   pageTitle: string
 }
 
-const NAV_ITEMS: { id: Page; label: string; icon: React.ElementType }[] = [
+const BASE_NAV: { id: Page; label: string; icon: React.ElementType }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'graph', label: 'Curriculum Graph', icon: Network },
   { id: 'simulation', label: 'Simulation Lab', icon: FlaskConical },
@@ -28,7 +29,13 @@ const NAV_ITEMS: { id: Page; label: string; icon: React.ElementType }[] = [
 ]
 
 export default function AppLayout({ currentPage, onNavigate, children, pageTitle }: Props) {
-  const { user } = useAuthStore()
+  const { user, dbUser } = useAuthStore()
+  const NAV_ITEMS = dbUser?.role === 'admin'
+    ? [
+        { id: 'admin' as Page, label: 'Admin Panel', icon: ShieldCheck },
+        { id: 'settings' as Page, label: 'Settings', icon: Settings },
+      ]
+    : BASE_NAV
 
   const displayName = user?.email?.split('@')[0] ?? 'Usuario'
 

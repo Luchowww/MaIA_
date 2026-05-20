@@ -9,7 +9,10 @@ import GraphPage from '@/pages/GraphPage'
 import SimulationPage from '@/pages/SimulationPage'
 import ChatPage from '@/pages/ChatPage'
 import SettingsPage from '@/pages/SettingsPage'
+import AdminPage from '@/pages/AdminPage'
+import OnboardingPage from '@/pages/OnboardingPage'
 import ChatWidget from '@/components/chat/ChatWidget'
+import { api } from '@/lib/api'
 
 const queryClient = new QueryClient()
 
@@ -19,10 +22,11 @@ const PAGE_TITLES: Record<Page, string> = {
   simulation: 'Simulation Lab',
   chat: 'AI Chat',
   settings: 'Settings',
+  admin: 'Panel Administrativo',
 }
 
 function AppContent() {
-  const { session, setSession, clear } = useAuthStore()
+  const { session, setSession, clear, dbUser, setDbUser } = useAuthStore()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
 
   useEffect(() => {
@@ -41,7 +45,43 @@ function AppContent() {
     return () => listener.subscription.unsubscribe()
   }, [setSession, clear])
 
+  // Fetch db user (with role) after session is set
+  useEffect(() => {
+    if (session && !dbUser) {
+      api.get('/auth/me').then((r) => setDbUser(r.data)).catch(() => {})
+    }
+    if (!session) {
+      setDbUser(null)
+    }
+  }, [session, dbUser, setDbUser])
+
   if (!session) return <LoginPage />
+
+  // Admin: only admin panel + settings
+  if (dbUser?.role === 'admin') {
+    const adminPage = currentPage === 'settings' ? 'settings' : 'admin'
+    return (
+      <AppLayout
+        currentPage={adminPage}
+        onNavigate={setCurrentPage}
+        pageTitle={PAGE_TITLES[adminPage]}
+      >
+        {adminPage === 'settings' ? <SettingsPage /> : <AdminPage />}
+      </AppLayout>
+    )
+  }
+
+  // Student: show onboarding if not completed yet
+  if (dbUser && !dbUser.is_onboarded) {
+    return (
+      <OnboardingPage
+        onComplete={() => {
+          setDbUser({ ...dbUser, is_onboarded: true })
+          setCurrentPage('dashboard')
+        }}
+      />
+    )
+  }
 
   return (
     <AppLayout
