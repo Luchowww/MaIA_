@@ -27,6 +27,18 @@ interface Prerequisite {
   prerequisite_course_id: string
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string
+    }
+  }
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  return (error as ApiError).response?.data?.detail ?? fallback
+}
+
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
 function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -528,6 +540,12 @@ interface CurriculumUploadResponse {
   warnings: string[]
 }
 
+interface CurriculumConfirmResponse {
+  created_courses: number
+  created_prerequisites: number
+  unresolved_prerequisites?: string[]
+}
+
 function normalizePreviewCode(value: string) {
   return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
 }
@@ -571,7 +589,7 @@ function CurriculumUploadTab() {
 
   const confirmMut = useMutation({
     mutationFn: (courses: ParsedCourse[]) =>
-      api.post('/admin/curriculum/confirm', { program_id: selectedProgram, courses }),
+      api.post<CurriculumConfirmResponse>('/admin/curriculum/confirm', { program_id: selectedProgram, courses }),
     onSuccess: (response) => {
       qc.invalidateQueries({ queryKey: ['admin', 'courses'] })
       const data = response.data
@@ -583,8 +601,8 @@ function CurriculumUploadTab() {
       setPreview(null)
       setFile(null)
     },
-    onError: (e: any) => {
-      setConfirmError(e?.response?.data?.detail ?? 'No se pudo guardar la importacion')
+    onError: (e: unknown) => {
+      setConfirmError(getApiErrorMessage(e, 'No se pudo guardar la importacion'))
     },
   })
 
@@ -656,8 +674,8 @@ function CurriculumUploadTab() {
       setPreview(res.data.courses)
       setUploadWarnings(res.data.warnings ?? [])
       setRawTextLength(res.data.raw_text_length ?? null)
-    } catch (e: any) {
-      setUploadError(e?.response?.data?.detail ?? 'Error al procesar el archivo')
+    } catch (e: unknown) {
+      setUploadError(getApiErrorMessage(e, 'Error al procesar el archivo'))
     } finally {
       setUploading(false)
     }
@@ -956,7 +974,7 @@ function CurriculumUploadTab() {
 
           {confirmMut.isSuccess && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-700">
-              ¡Importación exitosa! {(confirmMut.data as any)?.data?.created_courses ?? 0} materias creadas.
+              Importacion exitosa! {confirmMut.data?.data.created_courses ?? 0} materias creadas.
             </div>
           )}
 

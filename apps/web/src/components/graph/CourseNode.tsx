@@ -4,43 +4,55 @@ import type { CourseNodeData, CourseStatus } from '@/stores/graphStore'
 
 const STATUS_CONFIG: Record<
   CourseStatus,
-  { card: string; badge: string; dot: string; label: string }
+  { card: string; badge: string; dot: string; label: string; accent: string; handle: string }
 > = {
   approved: {
-    card: 'border-emerald-200 bg-white',
-    badge: 'bg-emerald-100 text-emerald-700',
-    dot: 'bg-emerald-400',
+    card: 'border-emerald-300 bg-emerald-50',
+    badge: 'bg-emerald-600 text-white',
+    dot: 'bg-emerald-500',
     label: 'Aprobada',
+    accent: 'bg-emerald-500',
+    handle: '!bg-emerald-500',
   },
   in_progress: {
-    card: 'border-blue-200 bg-white',
-    badge: 'bg-blue-100 text-blue-700',
-    dot: 'bg-blue-400',
-    label: 'En Curso',
+    card: 'border-blue-300 bg-blue-50',
+    badge: 'bg-blue-600 text-white',
+    dot: 'bg-blue-500',
+    label: 'En curso',
+    accent: 'bg-blue-500',
+    handle: '!bg-blue-500',
   },
   pending: {
     card: 'border-slate-200 bg-white',
-    badge: 'bg-slate-100 text-slate-500',
+    badge: 'bg-slate-100 text-slate-600',
     dot: 'bg-slate-300',
     label: 'Pendiente',
+    accent: 'bg-slate-300',
+    handle: '!bg-slate-300',
   },
   blocked: {
-    card: 'border-amber-200 bg-white',
-    badge: 'bg-amber-100 text-amber-700',
-    dot: 'bg-amber-400',
+    card: 'border-amber-300 bg-amber-50',
+    badge: 'bg-amber-500 text-white',
+    dot: 'bg-amber-500',
     label: 'Bloqueada',
+    accent: 'bg-amber-500',
+    handle: '!bg-amber-500',
   },
   failed: {
-    card: 'border-red-200 bg-white',
-    badge: 'bg-red-100 text-red-600',
-    dot: 'bg-red-400',
-    label: 'Reprobada',
+    card: 'border-red-400 bg-red-50',
+    badge: 'bg-red-600 text-white',
+    dot: 'bg-red-600',
+    label: 'Perdida',
+    accent: 'bg-red-600',
+    handle: '!bg-red-600',
   },
   simulated: {
-    card: 'border-yellow-300 bg-yellow-50',
-    badge: 'bg-yellow-100 text-yellow-700',
-    dot: 'bg-yellow-400',
-    label: 'Simulada',
+    card: 'border-orange-400 bg-orange-50',
+    badge: 'bg-orange-500 text-white',
+    dot: 'bg-orange-500',
+    label: 'Afectada',
+    accent: 'bg-orange-500',
+    handle: '!bg-orange-500',
   },
 }
 
@@ -50,41 +62,39 @@ function CourseNode({ data, selected }: NodeProps<CourseNodeData>) {
   return (
     <div
       style={{ width: 190 }}
-      className={`border rounded-xl p-3 cursor-pointer shadow-sm transition-all select-none ${cfg.card} ${
+      className={`relative overflow-hidden rounded-xl border p-3 shadow-sm transition-all select-none cursor-pointer ${cfg.card} ${
         selected ? 'ring-2 ring-indigo-500 ring-offset-1 shadow-md' : 'hover:shadow-md hover:border-slate-300'
       }`}
     >
+      <div className={`absolute inset-y-0 left-0 w-1 ${cfg.accent}`} />
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2 !h-2 !bg-slate-300 !border-2 !border-white"
+        className={`!h-2.5 !w-2.5 !border-2 !border-white ${cfg.handle}`}
       />
 
-      {/* Top row: code + badge */}
-      <div className="flex items-start justify-between gap-1 mb-1.5">
-        <span className="text-[10px] font-mono font-semibold text-slate-400 leading-none pt-0.5">
+      <div className="mb-1.5 flex items-start justify-between gap-1 pl-1">
+        <span className="pt-0.5 font-mono text-[10px] font-semibold leading-none text-slate-500">
           {data.code}
         </span>
-        <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 ${cfg.badge}`}>
+        <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide ${cfg.badge}`}>
           {cfg.label}
         </span>
       </div>
 
-      {/* Course name */}
-      <p className="text-[12px] font-semibold text-slate-900 leading-tight line-clamp-2 mb-2">
+      <p className="mb-2 line-clamp-2 pl-1 text-[12px] font-semibold leading-tight text-slate-950">
         {data.name}
       </p>
 
-      {/* Bottom: credits */}
-      <div className="flex items-center gap-1.5">
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-        <span className="text-[10px] text-slate-400">{data.credits} Créditos</span>
+      <div className="flex items-center gap-1.5 pl-1">
+        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${cfg.dot}`} />
+        <span className="text-[10px] font-medium text-slate-500">{data.credits} Creditos</span>
       </div>
 
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2 !h-2 !bg-slate-300 !border-2 !border-white"
+        className={`!h-2.5 !w-2.5 !border-2 !border-white ${cfg.handle}`}
       />
     </div>
   )

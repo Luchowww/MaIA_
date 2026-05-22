@@ -4,6 +4,7 @@ import { ChevronDown, Network } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useGraphStore } from '@/stores/graphStore'
 import CurriculumGraph from '@/components/graph/CurriculumGraph'
+import SimulationPanel from '@/components/graph/SimulationPanel'
 
 interface Program {
   id: string
@@ -17,7 +18,7 @@ const STATUS_DOT: Record<string, string> = {
   pending: 'bg-slate-300',
   blocked: 'bg-amber-400',
   failed: 'bg-red-400',
-  simulated: 'bg-yellow-400',
+  simulated: 'bg-orange-400',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,7 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
   pending: 'Pendiente',
   blocked: 'Bloqueada',
   failed: 'Reprobada',
-  simulated: 'Simulada',
+  simulated: 'Afectada',
 }
 
 export default function GraphPage() {
@@ -39,19 +40,14 @@ export default function GraphPage() {
     queryFn: () => api.get('/programs').then((r) => r.data),
   })
 
-  // Auto-select first active program
-  useEffect(() => {
-    if (programs && programs.length > 0 && !programId) {
-      const first = programs.find((p) => p.is_active) ?? programs[0]
-      setProgramId(first.id)
-    }
-  }, [programs, programId])
+  const firstProgram = programs?.find((p) => p.is_active) ?? programs?.[0]
+  const selectedProgramId = programId || firstProgram?.id || ''
 
   const { data, isLoading } = useQuery({
-    queryKey: ['graph', programId],
+    queryKey: ['graph', selectedProgramId],
     queryFn: () =>
-      api.get(`/courses/graph?program_id=${programId}`).then((r) => r.data),
-    enabled: !!programId,
+      api.get(`/courses/graph?program_id=${selectedProgramId}`).then((r) => r.data),
+    enabled: !!selectedProgramId,
   })
 
   useEffect(() => {
@@ -70,7 +66,7 @@ export default function GraphPage() {
 
   const activeStatuses = Object.entries(statusCounts).filter(([, count]) => count > 0)
 
-  const selectedProgram = programs?.find((p) => p.id === programId)
+  const selectedProgram = programs?.find((p) => p.id === selectedProgramId)
 
   return (
     <div className="flex flex-col h-full">
@@ -81,7 +77,7 @@ export default function GraphPage() {
           <Network size={15} className="text-slate-400" />
           <div className="relative">
             <select
-              value={programId}
+              value={selectedProgramId}
               onChange={(e) => setProgramId(e.target.value)}
               className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
@@ -100,24 +96,29 @@ export default function GraphPage() {
           </span>
         )}
 
-        {/* Legend */}
-        {activeStatuses.length > 0 && (
-          <div className="ml-auto flex items-center gap-4">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Estados</span>
-            {activeStatuses.map(([status, count]) => (
-              <span key={status} className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status] ?? 'bg-slate-300'}`} />
-                <span className="text-xs text-slate-500">{STATUS_LABEL[status] ?? status}</span>
-                <span className="text-[10px] font-semibold text-slate-400">({count})</span>
-              </span>
-            ))}
+        {courseNodes.length > 0 && (
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
+            {/* Legend */}
+            {activeStatuses.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Estados</span>
+                {activeStatuses.map(([status, count]) => (
+                  <span key={status} className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status] ?? 'bg-slate-300'}`} />
+                    <span className="text-xs text-slate-500">{STATUS_LABEL[status] ?? status}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">({count})</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            <SimulationPanel />
           </div>
         )}
       </div>
 
       {/* Graph area */}
       <div className="flex-1 relative">
-        {!programId || isLoading ? (
+        {!selectedProgramId || isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Network size={36} className="text-slate-300 mx-auto mb-3" />

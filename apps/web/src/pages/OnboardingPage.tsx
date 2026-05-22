@@ -22,6 +22,18 @@ interface Props {
   onComplete: () => void
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string
+    }
+  }
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  return (error as ApiError).response?.data?.detail ?? fallback
+}
+
 // ─── Step indicators ──────────────────────────────────────────────────────────
 
 function StepDot({ n, active, done }: { n: number; active: boolean; done: boolean }) {
@@ -86,8 +98,8 @@ export default function OnboardingPage({ onComplete }: Props) {
         approved_course_ids: Array.from(approvedIds),
       })
       onComplete()
-    } catch (e: any) {
-      setError(e?.response?.data?.detail ?? 'Error al guardar. Intenta de nuevo.')
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, 'Error al guardar. Intenta de nuevo.'))
     } finally {
       setSubmitting(false)
     }

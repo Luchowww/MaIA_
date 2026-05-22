@@ -1,74 +1,81 @@
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { AlertTriangle, MousePointer2, RotateCcw, X } from 'lucide-react'
 import { useGraphStore } from '@/stores/graphStore'
 
-interface Props {
-  programId: string
-}
+export default function SimulationPanel() {
+  const {
+    nodes,
+    simulationMode,
+    selectedCourseId,
+    simulationResult,
+    setSimulationMode,
+    setSelectedCourse,
+    runLossSimulation,
+    resetSimulation,
+  } = useGraphStore()
 
-export default function SimulationPanel({ programId }: Props) {
-  const { simulationMode, selectedCourseId, setSimulationMode, applySimulationResult, nodes } =
-    useGraphStore()
+  const selectedNode = nodes.find((node) => node.id === selectedCourseId)
+  const failedNode = nodes.find((node) => node.id === simulationResult?.failedId)
+  const affectedDependents = simulationResult
+    ? Math.max(simulationResult.affectedIds.length - 1, 0)
+    : 0
 
-  const [affectedCount, setAffectedCount] = useState<number | null>(null)
-
-  const mutation = useMutation({
-    mutationFn: (courseId: string) =>
-      api
-        .post('/simulation/loss', { course_id: courseId, program_id: programId })
-        .then((r) => r.data),
-    onSuccess: (data) => {
-      applySimulationResult(data.affected_course_ids)
-      setAffectedCount(data.affected_course_ids.length)
-      setSimulationMode(false)
-    },
-  })
-
-  const selectedNode = nodes.find((n) => n.id === selectedCourseId)
-
-  if (!simulationMode) {
+  if (simulationMode) {
     return (
-      <div className="ml-auto flex items-center gap-3">
-        {affectedCount !== null && (
-          <span className="text-xs text-amber-600 font-medium">
-            {affectedCount} materia(s) afectadas por la simulación
-          </span>
-        )}
+      <div className="flex flex-wrap items-center justify-end gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+        <MousePointer2 size={14} className="text-amber-600" />
+        <span className="text-xs font-medium text-amber-800">
+          {selectedCourseId
+            ? `Seleccionada: ${selectedNode?.data.code ?? selectedCourseId}`
+            : 'Haz clic en una materia'}
+        </span>
         <button
-          onClick={() => {
-            setSimulationMode(true)
-            setAffectedCount(null)
-          }}
-          className="text-sm bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-lg px-3 py-1.5 transition"
+          type="button"
+          onClick={() => selectedCourseId && runLossSimulation(selectedCourseId)}
+          disabled={!selectedCourseId}
+          className="inline-flex items-center gap-1.5 rounded-md bg-red-500 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          Simular pérdida
+          <AlertTriangle size={13} />
+          Ver impacto
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedCourse(null)
+            setSimulationMode(false)
+          }}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-white hover:text-slate-700"
+          title="Cancelar"
+        >
+          <X size={14} />
         </button>
       </div>
     )
   }
 
   return (
-    <div className="ml-auto flex items-center gap-3">
-      <p className="text-sm text-amber-700 font-medium">
-        {selectedCourseId
-          ? `Seleccionada: ${selectedNode?.data.code ?? selectedCourseId}`
-          : 'Haz click en una materia para simular su pérdida'}
-      </p>
-      {selectedCourseId && (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {simulationResult && (
+        <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+          {failedNode?.data.code ?? 'Materia'} perdida, {affectedDependents} afectadas
+        </span>
+      )}
+      {simulationResult && (
         <button
-          onClick={() => mutation.mutate(selectedCourseId)}
-          disabled={mutation.isPending}
-          className="text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg px-3 py-1.5 transition disabled:opacity-50"
+          type="button"
+          onClick={resetSimulation}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+          title="Limpiar simulacion"
         >
-          {mutation.isPending ? 'Calculando...' : 'Confirmar simulación'}
+          <RotateCcw size={15} />
         </button>
       )}
       <button
-        onClick={() => setSimulationMode(false)}
-        className="text-sm text-gray-500 hover:text-gray-700 transition"
+        type="button"
+        onClick={() => setSimulationMode(true)}
+        className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600"
       >
-        Cancelar
+        <AlertTriangle size={15} />
+        Simular perdida
       </button>
     </div>
   )
