@@ -46,7 +46,6 @@ class Program(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     courses: Mapped[list["Course"]] = relationship("Course", back_populates="program")
-    course_programs: Mapped[list["CourseProgram"]] = relationship("CourseProgram", back_populates="program")
     student_programs: Mapped[list["StudentProgram"]] = relationship("StudentProgram", back_populates="program")
 
 
@@ -70,7 +69,6 @@ class Course(Base):
     )
     student_courses: Mapped[list["StudentCourse"]] = relationship("StudentCourse", back_populates="course")
     embeddings: Mapped[list["Embedding"]] = relationship("Embedding", back_populates="course")
-    course_programs: Mapped[list["CourseProgram"]] = relationship("CourseProgram", back_populates="course")
 
 
 class Prerequisite(Base):
@@ -112,19 +110,6 @@ class StudentProgram(Base):
     enrolled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     program: Mapped["Program"] = relationship("Program", back_populates="student_programs")
-
-
-class CourseProgram(Base):
-    __tablename__ = "course_programs"
-    __table_args__ = (UniqueConstraint("course_id", "program_id"),)
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
-    program_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("programs.id", ondelete="CASCADE"))
-    semester: Mapped[int] = mapped_column(BigInteger, nullable=False)
-
-    course: Mapped["Course"] = relationship("Course", back_populates="course_programs")
-    program: Mapped["Program"] = relationship("Program", back_populates="course_programs")
 
 
 class Embedding(Base):

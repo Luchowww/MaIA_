@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import require_admin
@@ -66,11 +66,9 @@ async def update_program(
 
 @router.delete("/programs/{program_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_program(program_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
-    result = await db.execute(select(Program).where(Program.id == program_id))
-    program = result.scalar_one_or_none()
-    if not program:
+    result = await db.execute(delete(Program).where(Program.id == program_id))
+    if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Program not found")
-    await db.delete(program)
     await db.commit()
 
 
@@ -132,11 +130,9 @@ async def update_course(
 
 @router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_course(course_id: uuid.UUID, db: AsyncSession = Depends(get_db), _admin=Depends(require_admin)):
-    result = await db.execute(select(Course).where(Course.id == course_id))
-    course = result.scalar_one_or_none()
-    if not course:
+    result = await db.execute(delete(Course).where(Course.id == course_id))
+    if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Course not found")
-    await db.delete(course)
     await db.commit()
 
 

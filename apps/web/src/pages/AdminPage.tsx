@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Pencil, Check, X, ChevronDown, Upload, FileText, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Pencil, Check, X, ChevronDown, Upload, FileText, Loader2, AlertTriangle, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -505,6 +505,39 @@ interface ParsedCourse {
   credits: number
   semester: number
   prerequisite_codes: string[]
+  warnings?: string[]
+}
+
+interface CurriculumImportStatus {
+  ocr: {
+    available: boolean
+    languages: string[]
+    has_spanish: boolean
+    has_english: boolean
+  }
+  llm: {
+    available: boolean
+    model: string
+    installed_models: string[]
+  }
+}
+
+interface CurriculumUploadResponse {
+  courses: ParsedCourse[]
+  raw_text_length: number
+  warnings: string[]
+}
+
+function normalizePreviewCode(value: string) {
+  return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+}
+
+function splitPrerequisiteCodes(value: string) {
+  return value
+    .split(/[,;/\s]+/)
+    .map(normalizePreviewCode)
+    .filter(Boolean)
+    .filter((code, index, list) => list.indexOf(code) === index)
 }
 
 function CurriculumUploadTab() {
@@ -515,34 +548,114 @@ function CurriculumUploadTab() {
   const [preview, setPreview] = useState<ParsedCourse[] | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadWarnings, setUploadWarnings] = useState<string[]>([])
+  const [rawTextLength, setRawTextLength] = useState<number | null>(null)
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null)
+  const [confirmError, setConfirmError] = useState<string | null>(null)
 
   const { data: programs = [] } = useQuery<Program[]>({
     queryKey: ['admin', 'programs'],
     queryFn: () => api.get('/admin/programs').then((r) => r.data),
   })
 
+  const { data: importStatus } = useQuery<CurriculumImportStatus>({
+    queryKey: ['admin', 'curriculum-status'],
+    queryFn: () => api.get('/admin/curriculum/status').then((r) => r.data),
+  })
+
+  const { data: existingCourses = [] } = useQuery<Course[]>({
+    queryKey: ['admin', 'courses', selectedProgram],
+    queryFn: () => api.get(`/admin/courses?program_id=${selectedProgram}`).then((r) => r.data),
+    enabled: !!selectedProgram,
+  })
+
   const confirmMut = useMutation({
     mutationFn: (courses: ParsedCourse[]) =>
       api.post('/admin/curriculum/confirm', { program_id: selectedProgram, courses }),
-    onSuccess: () => {
+    onSuccess: (response) => {
       qc.invalidateQueries({ queryKey: ['admin', 'courses'] })
+      const data = response.data
+      const unresolved = data.unresolved_prerequisites?.length ?? 0
+      setConfirmMessage(
+        `Importacion lista: ${data.created_courses} materias nuevas, ${data.created_prerequisites} prerequisitos creados${unresolved ? `, ${unresolved} prerequisitos por revisar` : ''}.`
+      )
+      setConfirmError(null)
       setPreview(null)
       setFile(null)
     },
+    onError: (e: any) => {
+      setConfirmError(e?.response?.data?.detail ?? 'No se pudo guardar la importacion')
+    },
   })
+
+  const existingCodes = useMemo(
+    () => new Set(existingCourses.map((course) => normalizePreviewCode(course.code))),
+    [existingCourses],
+  )
+
+  const previewIssues = useMemo(() => {
+    if (!preview) return []
+    const issues: string[] = []
+    const previewCodes = preview.map((course) => normalizePreviewCode(course.code))
+    const previewCodeSet = new Set(previewCodes)
+    const semesterByCode = preview.reduce((acc, course) => {
+      acc[normalizePreviewCode(course.code)] = course.semester
+      return acc
+    }, {} as Record<string, number>)
+    const counts = previewCodes.reduce((acc, code) => {
+      acc[code] = (acc[code] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    preview.forEach((course, index) => {
+      const row = index + 1
+      const code = normalizePreviewCode(course.code)
+      if (!code) issues.push(`Fila ${row}: falta el codigo.`)
+      if (!course.name.trim()) issues.push(`Fila ${row}: falta el nombre.`)
+      if (counts[code] > 1) issues.push(`Fila ${row}: codigo duplicado ${code}.`)
+      if (course.credits < 1 || course.credits > 30) issues.push(`Fila ${row}: creditos fuera de rango.`)
+      if (course.semester < 1 || course.semester > 20) issues.push(`Fila ${row}: semestre fuera de rango.`)
+      course.prerequisite_codes.forEach((prereq) => {
+        const prereqCode = normalizePreviewCode(prereq)
+        if (prereqCode && prereqCode !== code && !previewCodeSet.has(prereqCode) && !existingCodes.has(prereqCode)) {
+          issues.push(`Fila ${row}: prerequisito ${prereqCode} no aparece en la vista previa ni en materias existentes.`)
+        }
+        if (semesterByCode[prereqCode] !== undefined && semesterByCode[prereqCode] >= course.semester) {
+          issues.push(`Fila ${row}: prerequisito ${prereqCode} no esta en un semestre anterior.`)
+        }
+      })
+    })
+
+    return issues
+  }, [existingCodes, preview])
+
+  const llmReady = importStatus?.llm.available ?? false
+  const ocrReady = !!importStatus?.ocr.available && (!!importStatus?.ocr.has_spanish || !!importStatus?.ocr.has_english)
+  const fileNeedsOcr = !!file && !file.name.toLowerCase().endsWith('.pdf')
+  const setupBlocksUpload = !!importStatus && (!llmReady || (fileNeedsOcr && !ocrReady))
 
   const handleUpload = async () => {
     if (!file || !selectedProgram) return
+    if (file.size === 0) {
+      setUploadError('El archivo seleccionado esta vacio (0 KB). Vuelve a elegir el PDF original o descargalo primero si esta en OneDrive.')
+      return
+    }
     setUploading(true)
     setUploadError(null)
+    setConfirmMessage(null)
+    setConfirmError(null)
+    setUploadWarnings([])
+    setRawTextLength(null)
     try {
       const formData = new FormData()
       formData.append('program_id', selectedProgram)
       formData.append('file', file)
-      const res = await api.post('/admin/curriculum/upload', formData, {
+      const res = await api.post<CurriculumUploadResponse>('/admin/curriculum/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setPreview(res.data.courses)
+      setUploadWarnings(res.data.warnings ?? [])
+      setRawTextLength(res.data.raw_text_length ?? null)
     } catch (e: any) {
       setUploadError(e?.response?.data?.detail ?? 'Error al procesar el archivo')
     } finally {
@@ -557,9 +670,46 @@ function CurriculumUploadTab() {
     setPreview(updated)
   }
 
+  const updatePrerequisites = (idx: number, value: string) => {
+    if (!preview) return
+    const updated = [...preview]
+    updated[idx] = { ...updated[idx], prerequisite_codes: splitPrerequisiteCodes(value) }
+    setPreview(updated)
+  }
+
+  const selectFile = (nextFile: File | null) => {
+    setFile(nextFile)
+    setPreview(null)
+    setUploadError(
+      nextFile?.size === 0
+        ? 'El archivo seleccionado esta vacio (0 KB). Vuelve a elegir el PDF original o descargalo primero si esta en OneDrive.'
+        : null
+    )
+    setConfirmMessage(null)
+    setConfirmError(null)
+    setUploadWarnings([])
+    setRawTextLength(null)
+  }
+
   const removeFromPreview = (idx: number) => {
     if (!preview) return
     setPreview(preview.filter((_, i) => i !== idx))
+  }
+
+  const addManualCourse = () => {
+    if (!preview) return
+    const lastSemester = preview.length > 0 ? preview[preview.length - 1].semester : 1
+    setPreview([
+      ...preview,
+      {
+        code: '',
+        name: '',
+        credits: 3,
+        semester: lastSemester,
+        prerequisite_codes: [],
+        warnings: [],
+      },
+    ])
   }
 
   return (
@@ -568,6 +718,28 @@ function CurriculumUploadTab() {
         Sube un PDF o imagen de la malla curricular. MaIA usará OCR + IA para extraer las materias automáticamente.
         Revisa el resultado antes de confirmar.
       </p>
+
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${ocrReady ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+          {ocrReady ? <CheckCircle size={13} /> : <AlertTriangle size={13} />}
+          OCR {ocrReady ? 'listo' : 'por configurar'}
+        </span>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${llmReady ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+          {llmReady ? <CheckCircle size={13} /> : <AlertTriangle size={13} />}
+          IA {llmReady ? 'lista' : 'por configurar'}
+        </span>
+        {importStatus && !importStatus.ocr.has_spanish && importStatus.ocr.has_english && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+            <AlertTriangle size={13} /> OCR sin espanol
+          </span>
+        )}
+      </div>
+
+      {confirmMessage && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-700">
+          {confirmMessage}
+        </div>
+      )}
 
       {/* Step 1: Select program + file */}
       {!preview && (
@@ -588,7 +760,13 @@ function CurriculumUploadTab() {
 
           {/* Drop zone */}
           <button
+            type="button"
             onClick={() => fileRef.current?.click()}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault()
+              selectFile(event.dataTransfer.files?.[0] ?? null)
+            }}
             className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
               file ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
             }`}
@@ -610,10 +788,19 @@ function CurriculumUploadTab() {
           <input
             ref={fileRef}
             type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.tiff,.bmp"
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => selectFile(e.target.files?.[0] ?? null)}
           />
+
+          {setupBlocksUpload && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm text-amber-700">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                {!llmReady ? `Falta el modelo ${importStatus?.llm.model ?? 'de IA'} en Ollama.` : 'El OCR no esta listo para este tipo de archivo.'}
+              </span>
+            </div>
+          )}
 
           {uploadError && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
@@ -623,7 +810,7 @@ function CurriculumUploadTab() {
 
           <button
             onClick={handleUpload}
-            disabled={!file || !selectedProgram || uploading}
+            disabled={!file || !selectedProgram || uploading || setupBlocksUpload}
             className="flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors w-fit"
           >
             {uploading ? <><Loader2 size={14} className="animate-spin" /> Procesando con IA...</> : <><Upload size={14} /> Extraer materias</>}
@@ -646,6 +833,51 @@ function CurriculumUploadTab() {
             </button>
           </div>
 
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={addManualCourse}
+              className="flex items-center gap-1.5 border border-slate-200 bg-white px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <Plus size={13} /> Agregar materia
+            </button>
+          </div>
+
+          {rawTextLength !== null && (
+            <p className="text-xs text-slate-400">
+              Texto leido: {rawTextLength.toLocaleString()} caracteres.
+            </p>
+          )}
+
+          {uploadWarnings.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm text-amber-700">
+              <div className="flex items-center gap-2 font-medium">
+                <AlertTriangle size={15} /> Alertas de lectura
+              </div>
+              <ul className="mt-1 list-disc pl-5">
+                {uploadWarnings.map((warning, index) => <li key={index}>{warning}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {previewIssues.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">
+              <div className="flex items-center gap-2 font-medium">
+                <AlertTriangle size={15} /> Revisa antes de guardar
+              </div>
+              <ul className="mt-1 list-disc pl-5">
+                {previewIssues.slice(0, 8).map((issue, index) => <li key={index}>{issue}</li>)}
+                {previewIssues.length > 8 && <li>{previewIssues.length - 8} alertas mas.</li>}
+              </ul>
+            </div>
+          )}
+
+          {confirmError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">
+              {confirmError}
+            </div>
+          )}
+
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -665,6 +897,7 @@ function CurriculumUploadTab() {
                       <input
                         value={c.code}
                         onChange={(e) => updatePreview(idx, 'code', e.target.value)}
+                        onBlur={() => updatePreview(idx, 'code', normalizePreviewCode(c.code))}
                         className="border border-slate-200 rounded px-2 py-0.5 text-xs w-20 outline-none focus:border-indigo-300"
                       />
                     </td>
@@ -691,8 +924,21 @@ function CurriculumUploadTab() {
                         className="border border-slate-200 rounded px-2 py-0.5 text-sm w-16 outline-none focus:border-indigo-300"
                       />
                     </td>
-                    <td className="px-3 py-2 text-xs text-slate-500">
+                    <td className="px-3 py-2">
+                      <input
+                        value={c.prerequisite_codes.join(', ')}
+                        onChange={(e) => updatePrerequisites(idx, e.target.value)}
+                        placeholder="-"
+                        className="border border-slate-200 rounded px-2 py-0.5 text-xs w-36 outline-none focus:border-indigo-300"
+                      />
+                      {c.warnings && c.warnings.length > 0 && (
+                        <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-amber-600">
+                          {c.warnings.map((warning, warningIndex) => <span key={warningIndex}>{warning}</span>)}
+                        </div>
+                      )}
+                      <span className="hidden">
                       {c.prerequisite_codes.join(', ') || '—'}
+                      </span>
                     </td>
                     <td className="px-3 py-2">
                       <button
@@ -717,10 +963,17 @@ function CurriculumUploadTab() {
           <div className="flex gap-2">
             <button
               onClick={() => confirmMut.mutate(preview)}
-              disabled={confirmMut.isPending || preview.length === 0}
+              disabled={confirmMut.isPending || preview.length === 0 || previewIssues.length > 0}
               className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
               {confirmMut.isPending ? <><Loader2 size={14} className="animate-spin" /> Guardando...</> : <><Check size={14} /> Confirmar e importar</>}
+            </button>
+            <button
+              type="button"
+              onClick={addManualCourse}
+              className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <Plus size={14} /> Agregar materia
             </button>
             <button
               onClick={() => setPreview(null)}

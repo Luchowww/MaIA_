@@ -95,7 +95,6 @@ export default function ScenariosPage({ onCompare }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {scenarios.map((s) => {
               const isSelected = selected.has(s.id)
-              const isDeleting = deletingId === s.id
               return (
                 <div
                   key={s.id}
