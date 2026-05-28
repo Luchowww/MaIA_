@@ -1,2 +1,2 @@
-[variables]
-NIXPACKS_NODE_VERSION = "23"
+[phases.setup]
+nixPkgs = ["nodejs_23", "npm-10_x"]
