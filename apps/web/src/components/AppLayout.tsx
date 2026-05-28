@@ -6,7 +6,6 @@ import {
   Settings,
   GraduationCap,
   Bell,
-  Search,
   GitCompare,
   ShieldCheck,
 } from 'lucide-react'
@@ -52,7 +51,7 @@ export default function AppLayout({ currentPage, onNavigate, children, pageTitle
               <GraduationCap size={16} className="text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 leading-none">EduPortal</p>
+              <p className="text-sm font-bold text-slate-900 leading-none">MaIA</p>
               <p className="text-[10px] text-slate-400 mt-0.5">Academic Management</p>
             </div>
           </div>
@@ -96,16 +95,6 @@ export default function AppLayout({ currentPage, onNavigate, children, pageTitle
         {/* Topbar */}
         <header className="flex items-center gap-4 px-6 py-3.5 bg-white border-b border-slate-200 flex-shrink-0">
           <h1 className="text-base font-semibold text-slate-900 mr-auto">{pageTitle}</h1>
-
-          {/* Search */}
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-52">
-            <Search size={13} className="text-slate-400 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Buscar materias..."
-              className="bg-transparent text-xs text-slate-600 placeholder-slate-400 outline-none w-full"
-            />
-          </div>
 
           {/* Bell */}
           <button className="relative p-1.5 text-slate-400 hover:text-slate-600 transition-colors">

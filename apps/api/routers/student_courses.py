@@ -8,13 +8,32 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_current_user
 from database import get_db
-from models import Course, CourseStatus, Prerequisite, StudentCourse
+from models import Course, CourseStatus, Prerequisite, StudentCourse, StudentProgram, Program
 
 router = APIRouter(prefix="/student-courses", tags=["student-courses"])
 
 
 class StatusUpdate(BaseModel):
     status: CourseStatus
+
+
+@router.get("/my-program")
+async def get_my_program(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+) -> dict:
+    result = await db.execute(
+        select(Program)
+        .join(StudentProgram, StudentProgram.program_id == Program.id)
+        .where(StudentProgram.student_id == user["id"])
+    )
+    programs = result.scalars().all()
+    return {
+        "programs": [
+            {"id": str(p.id), "name": p.name, "is_active": p.is_active}
+            for p in programs
+        ]
+    }
 
 
 @router.get("/summary")

@@ -18,6 +18,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # b2c3d4e5f6a7 drops and recreates this table — skip if already exists
+    op.execute('DROP TABLE IF EXISTS simulation_scenarios CASCADE')
     op.create_table(
         'simulation_scenarios',
         sa.Column('id', sa.UUID(), nullable=False),

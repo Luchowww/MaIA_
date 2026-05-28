@@ -34,16 +34,16 @@ export default function GraphPage() {
   const setGraph = useGraphStore((s) => s.setGraph)
   const nodes = useGraphStore((s) => s.nodes)
 
-  const { data: programs } = useQuery<Program[]>({
-    queryKey: ['programs'],
-    queryFn: () => api.get('/programs').then((r) => r.data),
+  const { data: myProgramData } = useQuery<{ programs: Program[] }>({
+    queryKey: ['my-program'],
+    queryFn: () => api.get('/student-courses/my-program').then((r) => r.data),
   })
+  const programs = myProgramData?.programs ?? []
 
-  // Auto-select first active program
+  // Auto-select the student's enrolled program
   useEffect(() => {
-    if (programs && programs.length > 0 && !programId) {
-      const first = programs.find((p) => p.is_active) ?? programs[0]
-      setProgramId(first.id)
+    if (programs.length > 0 && !programId) {
+      setProgramId(programs[0].id)
     }
   }, [programs, programId])
 
@@ -85,7 +85,7 @@ export default function GraphPage() {
               onChange={(e) => setProgramId(e.target.value)}
               className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
-              {programs?.filter((p) => p.is_active).map((p) => (
+              {programs.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>

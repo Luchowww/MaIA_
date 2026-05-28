@@ -76,6 +76,49 @@ async def submit_onboarding(
     if existing_sp.scalar_one_or_none() is None:
         db.add(StudentProgram(student_id=user.id, program_id=body.program_id))
 
+    # Auto-mark next semester as in_progress when consecutive complete semesters are selected
+    if valid_ids:
+        all_courses_result = await db.execute(
+            select(Course).where(Course.program_id == body.program_id)
+        )
+        all_courses = all_courses_result.scalars().all()
+
+        by_semester: dict[int, list[Course]] = {}
+        for c in all_courses:
+            by_semester.setdefault(c.semester, []).append(c)
+
+        # Walk semesters in order; stop at first incomplete one
+        last_complete = 0
+        for sem in sorted(by_semester.keys()):
+            sem_ids = {c.id for c in by_semester[sem]}
+            if sem_ids.issubset(valid_ids):
+                last_complete = sem
+            else:
+                break
+
+        if last_complete > 0:
+            next_sem = last_complete + 1
+            if next_sem in by_semester:
+                next_ids = {c.id for c in by_semester[next_sem]}
+                # Only auto-mark when that semester has zero overlap with approved ids
+                if not next_ids.intersection(valid_ids):
+                    for c in by_semester[next_sem]:
+                        existing_sc = await db.execute(
+                            select(StudentCourse).where(
+                                StudentCourse.student_id == user.id,
+                                StudentCourse.course_id == c.id,
+                            )
+                        )
+                        sc = existing_sc.scalar_one_or_none()
+                        if sc is None:
+                            db.add(StudentCourse(
+                                student_id=user.id,
+                                course_id=c.id,
+                                status=CourseStatus.in_progress,
+                            ))
+                        elif sc.status == CourseStatus.pending:
+                            sc.status = CourseStatus.in_progress
+
     # Mark user as onboarded
     user.is_onboarded = True
     await db.commit()

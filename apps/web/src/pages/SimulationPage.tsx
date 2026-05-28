@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FlaskConical, Clock, TrendingUp, ChevronDown, Save, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -21,10 +21,17 @@ export default function SimulationPage() {
   const [scenarioName, setScenarioName] = useState('')
   const [savedOk, setSavedOk] = useState(false)
 
-  const { data: programs } = useQuery<Program[]>({
-    queryKey: ['programs'],
-    queryFn: () => api.get('/programs').then((r) => r.data),
+  const { data: myProgramData } = useQuery<{ programs: Program[] }>({
+    queryKey: ['my-program'],
+    queryFn: () => api.get('/student-courses/my-program').then((r) => r.data),
   })
+  const programs = myProgramData?.programs ?? []
+
+  useEffect(() => {
+    if (programs.length > 0 && !programId) {
+      setProgramId(programs[0].id)
+    }
+  }, [programs, programId])
 
   const { data: graphData } = useQuery({
     queryKey: ['graph', programId],

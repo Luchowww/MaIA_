@@ -35,13 +35,13 @@ export default function DashboardPage({ onNavigate }: Props) {
   const { user } = useAuthStore()
   const displayName = user?.email?.split('@')[0] ?? 'Estudiante'
 
-  const { data: programs } = useQuery<Program[]>({
-    queryKey: ['programs'],
-    queryFn: () => api.get('/programs').then((r) => r.data),
+  const { data: myProgramData } = useQuery<{ programs: Program[] }>({
+    queryKey: ['my-program'],
+    queryFn: () => api.get('/student-courses/my-program').then((r) => r.data),
   })
 
-  const activePrograms = programs?.filter((p) => p.is_active) ?? []
-  const programId = activePrograms[0]?.id
+  const myPrograms = myProgramData?.programs ?? []
+  const programId = myPrograms[0]?.id
 
   const { data: summary, isLoading: summaryLoading } = useQuery<StudentSummary>({
     queryKey: ['student-summary', programId],
@@ -53,7 +53,6 @@ export default function DashboardPage({ onNavigate }: Props) {
     ? Math.round((summary.approved_credits / summary.total_credits) * 100)
     : 0
 
-  // SVG donut: circumference of r=15.9 circle ≈ 99.9, we map pct to dasharray
   const donutFill = progressPct
   const donutEmpty = 100 - donutFill
 
@@ -138,20 +137,26 @@ export default function DashboardPage({ onNavigate }: Props) {
 
         <div className="bg-white rounded-2xl p-5 border border-slate-200">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Programas</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Programa</p>
             <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center">
               <BookOpen size={14} className="text-emerald-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{activePrograms.length}</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {activePrograms.length === 1 ? 'programa activo' : 'programas activos'}
-          </p>
-          <div className="flex flex-col gap-1 mt-3">
-            {activePrograms.slice(0, 2).map((p) => (
-              <span key={p.id} className="text-xs text-slate-600 truncate">• {p.name}</span>
-            ))}
-          </div>
+          {myPrograms.length === 0 ? (
+            <p className="text-xs text-slate-400 mt-1">Sin programa asignado</p>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-slate-900">{myPrograms.length}</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {myPrograms.length === 1 ? 'programa activo' : 'programas activos'}
+              </p>
+              <div className="flex flex-col gap-1 mt-3">
+                {myPrograms.slice(0, 2).map((p) => (
+                  <span key={p.id} className="text-xs text-slate-600 truncate">• {p.name}</span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl p-5 border border-slate-200">
@@ -197,7 +202,9 @@ export default function DashboardPage({ onNavigate }: Props) {
             )}
             {!summaryLoading && (summary?.next_available_courses.length ?? 0) === 0 && (
               <p className="text-xs text-slate-400 text-center py-4">
-                {summary?.approved_count === 0
+                {!programId
+                  ? 'Completa el onboarding para ver tus materias disponibles.'
+                  : summary?.approved_count === 0
                   ? 'Marca materias como aprobadas en la malla para ver recomendaciones.'
                   : 'No hay materias pendientes desbloqueadas.'}
               </p>
