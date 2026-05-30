@@ -285,9 +285,12 @@ async def validate_plan(
             StudentCourse.course_id.in_(all_courses.keys()),
         )
     )
-    approved = {
+    # Tratar approved + in_progress como "ya hecho", igual que el greedy.
+    # Los cursos in_progress se terminarán al final del semestre actual,
+    # por lo que son prerequisitos válidos para semestres futuros del plan.
+    already_done = {
         sc.course_id for sc in sc_result.scalars().all()
-        if sc.status == "approved"
+        if sc.status in ("approved", "in_progress")
     }
 
     # course_id → assigned semester in the proposed plan
@@ -311,11 +314,19 @@ async def validate_plan(
             continue
 
         # Check prerequisites
+        c = all_courses[cid]
+        is_intersem = _course_group(c.code, c.name) in _INTERSEMESTRAL_GROUPS
         for prereq_id in prereqs_map.get(cid, set()):
-            if prereq_id in approved:
-                continue  # already done
+            if prereq_id in already_done:
+                continue  # aprobado o en curso actualmente
             prereq_sem = plan_map.get(prereq_id)
-            if prereq_sem is None or prereq_sem >= a.assigned_semester:
+            # Intersemestrales: prereq puede estar en el mismo semestre (vacaciones)
+            # Normales: prereq debe estar estrictamente antes
+            invalid = prereq_sem is None or (
+                prereq_sem > a.assigned_semester if is_intersem
+                else prereq_sem >= a.assigned_semester
+            )
+            if invalid:
                 prereq_name = all_courses[prereq_id].name if prereq_id in all_courses else str(prereq_id)
                 violations.append({
                     "type": "prerequisite_not_met",
@@ -508,6 +519,10 @@ _SINGLE_PER_SEM_GROUPS = {"IGL", "SEMINARIO"}
 # Grupos que no se pueden adelantar (solo en semestre original o posterior)
 _NO_ADVANCE_GROUPS = {"IGL", "SEMINARIO", "IIN"}
 
+# Grupos intersemestrales: sus prereqs pueden estar en el MISMO semestre
+# (se presentan en vacaciones, al finalizar el semestre donde están los prereqs)
+_INTERSEMESTRAL_GROUPS = {"IIN"}
+
 
 def _plan_to_assignment(plan: list[dict]) -> dict[uuid.UUID, int]:
     """Convierte plan[{semester, course_ids}] → {course_id: semester}."""
@@ -550,8 +565,14 @@ def _can_place_course(
     prereqs_map: dict[uuid.UUID, set[uuid.UUID]],
     credit_limit: int,
     min_sem: int,
+    *,
+    allow_same_sem_prereqs: bool = False,
 ) -> bool:
-    """Devuelve True si cid puede ubicarse en target_sem sin violar ningún constraint."""
+    """Devuelve True si cid puede ubicarse en target_sem sin violar ningún constraint.
+
+    allow_same_sem_prereqs=True: los prereqs pueden estar en el mismo semestre (intersemestral).
+    Aplica a grupos en _INTERSEMESTRAL_GROUPS (ej. IIN — exámenes comprensivos en vacaciones).
+    """
     if target_sem <= min_sem:
         return False
 
@@ -562,13 +583,17 @@ def _can_place_course(
     if group in _NO_ADVANCE_GROUPS and c.semester > target_sem:
         return False
 
-    # Todos los prereqs deben completarse estrictamente antes de target_sem
+    # Prereqs: intersemestrales aceptan prereq_sem <= target_sem; normales < target_sem
     for p in prereqs_map.get(cid, set()):
         if p in completed_base:
             continue  # ya aprobado antes de la simulación
         placed = assignment.get(p)
-        if placed is None or placed >= target_sem:
-            return False
+        if allow_same_sem_prereqs:
+            if placed is None or placed > target_sem:
+                return False
+        else:
+            if placed is None or placed >= target_sem:
+                return False
 
     # Créditos en target_sem (excluyendo cid mismo)
     sem_credits = sum(
@@ -617,11 +642,14 @@ def _local_search_improve(
         # cascadeen (mover A antes permite mover B que depende de A)
         for cid in sorted(assignment, key=lambda c: assignment[c]):
             current_assigned = assignment[cid]
+            c = all_courses[cid]
+            is_intersem = _course_group(c.code, c.name) in _INTERSEMESTRAL_GROUPS
             # Intentar mover a cualquier semestre anterior
             for target in range(min_sem + 1, current_assigned):
                 if _can_place_course(
                     cid, target, assignment, completed_base,
                     all_courses, prereqs_map, credit_limit, min_sem,
+                    allow_same_sem_prereqs=is_intersem,
                 ):
                     assignment[cid] = target
                     improved = True
@@ -737,10 +765,12 @@ def _greedy_schedule(
     sem = current_sem + 1
 
     while remaining and sem <= max_original_sem + 20:
-        # Candidatos base: prereqs cumplidos + restricción _NO_ADVANCE_GROUPS
+        # ── Pasada 1: materias regulares (prereqs estrictamente anteriores) ──
+        # Los intersemestrales (IIN) se excluyen aquí y se manejan en pasada 2.
         eligible_base = [
             cid for cid in remaining
-            if prereqs_map[cid].issubset(completed)
+            if _course_group(all_courses[cid].code, all_courses[cid].name) not in _INTERSEMESTRAL_GROUPS
+            and prereqs_map[cid].issubset(completed)
             and (
                 _course_group(all_courses[cid].code, all_courses[cid].name)
                 not in _NO_ADVANCE_GROUPS
@@ -761,20 +791,13 @@ def _greedy_schedule(
             # 1. Materia perdida primero → recuperarla cuanto antes.
             # 2. Bloqueadas (priority 1) antes que libres (priority 2) → se ubican
             #    en el semestre más temprano posible sin que las libres les quitaran
-            #    el espacio. IIN 4319 puede ir a sem 7 en lugar de esperar al sem 10.
+            #    el espacio.
             # 3. Libres en orden ASC por semestre original → preservan sus cadenas
-            #    de prerequisitos (IST 4310→7111→7121→7122 van a sus sems naturales
-            #    5→6→7→8). Si las libres fueran DESC llenarían sem 5 y desplazarían
-            #    IST 4310, cascadeando toda la cadena hasta sem 11+.
-            # El "avance" real viene de (2): bloqueadas que estaban restringidas a
-            # sus sems originales en baseline ahora cascadean naturalmente al mínimo.
-            # _local_search_improve comprime el plan aún más tras el greedy.
+            #    de prerequisitos.
             eligible = eligible_base
             eligible.sort(key=lambda cid: (
-                # Prioridad: perdida (0), bloqueadas (1), libres (2)
                 0 if cid == lost_course_id
                 else (1 if cid in _blocked else 2),
-                # Todas las categorías: ASC por semestre original (orden natural)
                 all_courses[cid].semester,
                 all_courses[cid].credits,
             ))
@@ -793,6 +816,27 @@ def _greedy_schedule(
                 credits_used += c.credits
                 if group:
                     group_counts[group] = group_counts.get(group, 0) + 1
+
+        # ── Pasada 2: intersemestrales (IIN) ────────────────────────────────
+        # Sus prereqs pueden estar en este mismo semestre (vacaciones al finalizar sem).
+        # Se procesan DESPUÉS de la pasada 1 para que sem_courses ya esté poblado.
+        sem_courses_set = set(sem_courses)
+        iin_eligible = [
+            cid for cid in remaining
+            if cid not in sem_courses_set
+            and _course_group(all_courses[cid].code, all_courses[cid].name) in _INTERSEMESTRAL_GROUPS
+            and all_courses[cid].semester <= sem  # no adelantar antes de su semestre original
+            and all(
+                p in completed or p in sem_courses_set
+                for p in prereqs_map.get(cid, set())
+            )
+        ]
+        iin_eligible.sort(key=lambda cid: (all_courses[cid].semester, all_courses[cid].credits))
+        for cid in iin_eligible:
+            c = all_courses[cid]
+            if credits_used + c.credits <= credit_limit:
+                sem_courses.append(cid)
+                credits_used += c.credits
 
         if sem_courses:
             extra = max(0, credits_used - CREDIT_BASE)

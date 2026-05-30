@@ -117,15 +117,32 @@ export default function SimulationPage() {
   })
   const nodes: GraphNode[] = graphData?.nodes ?? []
 
-  // Group nodes by semester
-  const bySemester: Record<number, GraphNode[]> = {}
-  nodes.forEach((n) => {
-    const s = n.data.semester
-    if (!bySemester[s]) bySemester[s] = []
-    bySemester[s].push(n)
-  })
-  const semesters = Object.keys(bySemester).map(Number).sort((a, b) => a - b)
   const affectedSet = new Set(impactResult?.affected_course_ids ?? [])
+
+  // Agrupar por categoría de estado
+  const STATUS_GROUPS = [
+    { key: 'active',  label: 'Cursadas',   statuses: ['approved', 'in_progress'] },
+    { key: 'future',  label: 'Por Cursar', statuses: ['pending', 'blocked', 'failed'] },
+  ] as const
+
+  // Dentro de cada grupo, agrupar por semestre
+  const groupedNodes = STATUS_GROUPS.map((group) => {
+    const groupNodes = nodes.filter((n) => (group.statuses as readonly string[]).includes(n.data.status))
+    const bySem: Record<number, GraphNode[]> = {}
+    groupNodes.forEach((n) => {
+      const s = n.data.semester
+      if (!bySem[s]) bySem[s] = []
+      bySem[s].push(n)
+    })
+    const sems = Object.keys(bySem).map(Number).sort((a, b) => a - b)
+    return { ...group, bySem, sems }
+  }).filter((g) => g.sems.length > 0)
+
+  // Status de la materia seleccionada (para lenguaje contextual)
+  const selectedNode = nodes.find((n) => n.id === selectedCourseId)
+  const isFutureSimulation = selectedNode
+    ? ['pending', 'blocked', 'failed'].includes(selectedNode.data.status)
+    : false
 
   // ── Simulate mutation
   const simulateMutation = useMutation({
@@ -257,7 +274,8 @@ export default function SimulationPage() {
                 {activeScenarioData?.label ?? 'Escenario'}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                Pérdida de <strong>{mitigationResult.lost_course.name}</strong>
+                {isFutureSimulation ? 'Hipotético: ' : 'Pérdida de '}
+                <strong>{mitigationResult.lost_course.name}</strong>
               </p>
             </div>
 
@@ -395,50 +413,72 @@ export default function SimulationPage() {
               </div>
             </div>
 
-            {/* Course list */}
+            {/* Course list — grouped by status category */}
             {programId && (
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-                {semesters.map((sem) => (
-                  <div key={sem}>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-                      Semestre {String(sem).padStart(2, '0')}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      {bySemester[sem].map((n) => {
-                        const isSelected = selectedCourseId === n.id
-                        const isAffected = affectedSet.has(n.id)
-                        return (
-                          <button
-                            key={n.id}
-                            onClick={() => {
-                              setSelectedCourse(isSelected ? null : n.id)
-                              setImpactResult(null)
-                              setMitigResult(null)
-                              setSavedOk(false)
-                            }}
-                            className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
-                              isSelected
-                                ? 'border-red-300 bg-red-50'
-                                : isAffected
-                                ? 'border-amber-200 bg-amber-50'
-                                : 'border-slate-200 bg-white hover:border-slate-300'
-                            }`}
-                          >
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-                              isAffected ? 'bg-amber-200 text-amber-800' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                              {n.data.code.slice(0, 4)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-slate-900 truncate">{n.data.name}</p>
-                              <p className="text-[10px] text-slate-400">{n.data.credits} cr</p>
-                            </div>
-                            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${STATUS_BADGE[n.data.status] ?? 'bg-slate-100 text-slate-500'}`}>
-                              {STATUS_LABEL[n.data.status] ?? n.data.status}
-                            </span>
-                          </button>
-                        )
-                      })}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
+                {groupedNodes.map((group) => (
+                  <div key={group.key}>
+                    {/* Group header */}
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        group.key === 'active' ? 'bg-emerald-400' : 'bg-slate-300'
+                      }`} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        {group.label}
+                      </p>
+                      {group.key === 'future' && (
+                        <span className="text-[9px] text-slate-400 font-normal normal-case tracking-normal">
+                          · simulación hipotética
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Courses by semester within the group */}
+                    <div className="flex flex-col gap-3">
+                      {group.sems.map((sem) => (
+                        <div key={sem}>
+                          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5 pl-0.5">
+                            Sem {String(sem).padStart(2, '0')}
+                          </p>
+                          <div className="flex flex-col gap-1.5">
+                            {group.bySem[sem].map((n) => {
+                              const isSelected = selectedCourseId === n.id
+                              const isAffected = affectedSet.has(n.id)
+                              return (
+                                <button
+                                  key={n.id}
+                                  onClick={() => {
+                                    setSelectedCourse(isSelected ? null : n.id)
+                                    setImpactResult(null)
+                                    setMitigResult(null)
+                                    setSavedOk(false)
+                                  }}
+                                  className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all ${
+                                    isSelected
+                                      ? 'border-red-300 bg-red-50'
+                                      : isAffected
+                                      ? 'border-amber-200 bg-amber-50'
+                                      : 'border-slate-200 bg-white hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                                    isAffected ? 'bg-amber-200 text-amber-800' : 'bg-slate-100 text-slate-600'
+                                  }`}>
+                                    {n.data.code.slice(0, 4)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-slate-900 truncate">{n.data.name}</p>
+                                    <p className="text-[10px] text-slate-400">{n.data.credits} cr</p>
+                                  </div>
+                                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${STATUS_BADGE[n.data.status] ?? 'bg-slate-100 text-slate-500'}`}>
+                                    {STATUS_LABEL[n.data.status] ?? n.data.status}
+                                  </span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -521,12 +561,28 @@ export default function SimulationPage() {
 
             {/* Violation banner */}
             {violations.length > 0 && (
-              <div className="px-6 py-2 border-b border-red-100 bg-red-50 flex items-center gap-2">
-                <AlertTriangle size={13} className="text-red-600 flex-shrink-0" />
-                <p className="text-xs text-red-700">
-                  {violations.length} violación(es): {violations[0].detail}
-                  {violations.length > 1 && ` y ${violations.length - 1} más`}
-                </p>
+              <div className="border-b border-red-200 bg-red-50">
+                {/* Header row */}
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <AlertTriangle size={13} className="text-red-600 flex-shrink-0" />
+                  <span className="text-xs font-semibold text-red-700">
+                    {violations.length} violación{violations.length > 1 ? 'es' : ''} detectada{violations.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                {/* Individual violations */}
+                <ul className="px-4 pb-2.5 flex flex-col gap-1 max-h-32 overflow-y-auto">
+                  {violations.map((v, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                      <span className="text-[11px] text-red-700 leading-snug">
+                        {v.course_name && (
+                          <span className="font-semibold">{v.course_name}: </span>
+                        )}
+                        {v.detail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

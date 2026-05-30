@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, Network } from 'lucide-react'
+import { CheckSquare, ChevronDown, Network } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useGraphStore } from '@/stores/graphStore'
 import CurriculumGraph from '@/components/graph/CurriculumGraph'
+import BulkStatusBar from '@/components/graph/BulkStatusBar'
 
 interface Program {
   id: string
@@ -33,6 +34,8 @@ export default function GraphPage() {
   const [programId, setProgramId] = useState<string>('')
   const setGraph = useGraphStore((s) => s.setGraph)
   const nodes = useGraphStore((s) => s.nodes)
+  const multiSelectActive = useGraphStore((s) => s.multiSelectActive)
+  const setMultiSelectActive = useGraphStore((s) => s.setMultiSelectActive)
 
   const { data: myProgramData } = useQuery<{ programs: Program[] }>({
     queryKey: ['my-program'],
@@ -100,6 +103,19 @@ export default function GraphPage() {
           </span>
         )}
 
+        {/* Multi-select toggle */}
+        <button
+          onClick={() => setMultiSelectActive(!multiSelectActive)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all
+            ${multiSelectActive
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+            }`}
+        >
+          <CheckSquare size={13} />
+          Edición múltiple
+        </button>
+
         {/* Legend */}
         {activeStatuses.length > 0 && (
           <div className="ml-auto flex items-center gap-4">
@@ -132,6 +148,9 @@ export default function GraphPage() {
         ) : (
           <CurriculumGraph />
         )}
+
+        {/* Bulk action bar — floats above the graph */}
+        <BulkStatusBar />
       </div>
     </div>
   )

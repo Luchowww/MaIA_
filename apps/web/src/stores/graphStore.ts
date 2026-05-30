@@ -73,11 +73,18 @@ interface GraphState {
   edges: Edge[]
   simulationMode: boolean
   selectedCourseId: string | null
+  // Multi-select
+  multiSelectActive: boolean
+  multiSelectedIds: Set<string>
   setGraph: (nodes: Node<CourseNodeData>[], edges: Edge[]) => void
   updateNodeStatus: (courseId: string, status: CourseStatus) => void
   applySimulationResult: (affectedIds: string[]) => void
   setSimulationMode: (active: boolean) => void
   setSelectedCourse: (id: string | null) => void
+  setMultiSelectActive: (active: boolean) => void
+  toggleCourseSelect: (id: string) => void
+  clearMultiSelect: () => void
+  bulkUpdateNodeStatus: (ids: string[], status: CourseStatus) => void
 }
 
 export const useGraphStore = create<GraphState>((set) => ({
@@ -85,6 +92,8 @@ export const useGraphStore = create<GraphState>((set) => ({
   edges: [],
   simulationMode: false,
   selectedCourseId: null,
+  multiSelectActive: false,
+  multiSelectedIds: new Set<string>(),
 
   setGraph: (rawNodes, edges) => {
     const nodes = layoutNodes(rawNodes)
@@ -109,4 +118,25 @@ export const useGraphStore = create<GraphState>((set) => ({
 
   setSimulationMode: (active) => set({ simulationMode: active }),
   setSelectedCourse: (id) => set({ selectedCourseId: id }),
+
+  setMultiSelectActive: (active) =>
+    set({ multiSelectActive: active, multiSelectedIds: new Set<string>() }),
+
+  toggleCourseSelect: (id) =>
+    set((state) => {
+      const next = new Set(state.multiSelectedIds)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return { multiSelectedIds: next }
+    }),
+
+  clearMultiSelect: () =>
+    set({ multiSelectedIds: new Set<string>() }),
+
+  bulkUpdateNodeStatus: (ids, status) =>
+    set((state) => ({
+      nodes: state.nodes.map((n) =>
+        ids.includes(n.id) ? { ...n, data: { ...n.data, status } } : n,
+      ),
+    })),
 }))

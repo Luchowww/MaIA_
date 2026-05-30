@@ -17,6 +17,15 @@ class StatusUpdate(BaseModel):
     status: CourseStatus
 
 
+class BulkStatusItem(BaseModel):
+    course_id: uuid.UUID
+    status: CourseStatus
+
+
+class BulkStatusUpdate(BaseModel):
+    updates: list[BulkStatusItem]
+
+
 @router.get("/my-program")
 async def get_my_program(
     db: AsyncSession = Depends(get_db),
@@ -112,6 +121,43 @@ async def get_summary(
         "in_progress_courses": in_progress_courses,
         "next_available_courses": next_available[:5],
     }
+
+
+@router.patch("/bulk")
+async def bulk_update_status(
+    body: BulkStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Actualiza el estado de múltiples materias sin validar prerequisitos.
+    Acción explícita del usuario — él es responsable de la coherencia."""
+    succeeded: list[str] = []
+    failed: list[dict] = []
+
+    for item in body.updates:
+        try:
+            sc_result = await db.execute(
+                select(StudentCourse).where(
+                    StudentCourse.student_id == user["id"],
+                    StudentCourse.course_id == item.course_id,
+                )
+            )
+            sc_row = sc_result.scalar_one_or_none()
+            if sc_row:
+                sc_row.status = item.status
+            else:
+                sc_row = StudentCourse(
+                    student_id=user["id"],
+                    course_id=item.course_id,
+                    status=item.status,
+                )
+                db.add(sc_row)
+            succeeded.append(str(item.course_id))
+        except Exception as e:
+            failed.append({"course_id": str(item.course_id), "reason": str(e)})
+
+    await db.commit()
+    return {"succeeded": succeeded, "failed": failed}
 
 
 @router.patch("/{course_id}")

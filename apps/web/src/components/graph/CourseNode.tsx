@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from 'reactflow'
+import { Check } from 'lucide-react'
 import type { CourseNodeData, CourseStatus } from '@/stores/graphStore'
+import { useGraphStore } from '@/stores/graphStore'
 
 const STATUS_CONFIG: Record<
   CourseStatus,
@@ -44,21 +46,42 @@ const STATUS_CONFIG: Record<
   },
 }
 
-function CourseNode({ data, selected }: NodeProps<CourseNodeData>) {
+function CourseNode({ id, data, selected }: NodeProps<CourseNodeData>) {
   const cfg = STATUS_CONFIG[data.status] ?? STATUS_CONFIG.pending
+  const { multiSelectActive, multiSelectedIds } = useGraphStore()
+  const isMultiSelected = multiSelectedIds.has(id)
+
+  // In multi-select mode: dashed border hint on unselected, solid indigo on selected
+  const multiSelectRing = multiSelectActive
+    ? isMultiSelected
+      ? 'ring-2 ring-emerald-500 ring-offset-1 shadow-md border-emerald-300'
+      : 'border-dashed hover:border-indigo-300 hover:ring-1 hover:ring-indigo-200'
+    : ''
+
+  const normalRing = !multiSelectActive && selected
+    ? 'ring-2 ring-indigo-500 ring-offset-1 shadow-md'
+    : !multiSelectActive
+    ? 'hover:shadow-md hover:border-slate-300'
+    : ''
 
   return (
     <div
       style={{ width: 190 }}
-      className={`border rounded-xl p-3 cursor-pointer shadow-sm transition-all select-none ${cfg.card} ${
-        selected ? 'ring-2 ring-indigo-500 ring-offset-1 shadow-md' : 'hover:shadow-md hover:border-slate-300'
-      }`}
+      className={`border rounded-xl p-3 cursor-pointer shadow-sm transition-all select-none relative ${cfg.card} ${multiSelectRing} ${normalRing}`}
     >
       <Handle
         type="target"
         position={Position.Left}
         className="!w-2 !h-2 !bg-slate-300 !border-2 !border-white"
       />
+
+      {/* Multi-select checkmark */}
+      {multiSelectActive && (
+        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center transition-all
+          ${isMultiSelected ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+          {isMultiSelected && <Check size={10} className="text-white" strokeWidth={3} />}
+        </div>
+      )}
 
       {/* Top row: code + badge */}
       <div className="flex items-start justify-between gap-1 mb-1.5">

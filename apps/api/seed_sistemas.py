@@ -85,9 +85,10 @@ COURSES = [
     ("ELG 1306", "Electiva Profesional III", 3, 10),
     ("INV 7363", "Proyecto Final", 3, 10),
     ("ELP 8090", "Electiva Formación Complementaria II", 3, 10),
-    # Requisitos adicionales (sem 10 especial)
-    ("IIN 4310", "Examen Comprehensivo I", 0, 10),
-    ("IIN 4319", "Examen Comprehensivo II", 0, 10),
+    # Exámenes comprensivos (intersemestrales — se presentan en vacaciones)
+    # Sus prereqs pueden estar en el MISMO semestre (al finalizar ese semestre)
+    ("IIN 4310", "Examen Comprehensivo I", 0, 5),   # vacaciones entre sem 5 y 6
+    ("IIN 4319", "Examen Comprehensivo II", 0, 9),  # vacaciones entre sem 9 y 10
     ("IST 4370", "Seminario de Carrera I", 0, 10),
     ("IST 4380", "Seminario de Carrera II", 0, 10),
 ]
@@ -136,12 +137,13 @@ PREREQUISITES = [
     ("ELP 8090", "IST 7122"),
     ("ELP 8090", "IGL 7080"),
     ("ELP 8090", "IIN 4319"),
-    # Requisitos adicionales
+    # Comprensivo I: requiere haber aprobado las materias base de ciencias al final del sem 5
     ("IIN 4310", "MAT 4011"),
     ("IIN 4310", "MAT 1121"),
     ("IIN 4310", "FIS 1023"),
     ("IIN 4310", "FIS 1033"),
     ("IIN 4310", "FIS 1043"),
+    # IIN 4319 no tiene prerequisitos
 ]
 
 

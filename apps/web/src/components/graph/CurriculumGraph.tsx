@@ -36,7 +36,7 @@ const defaultEdgeOptions = {
 }
 
 export default function CurriculumGraph() {
-  const { nodes, edges, simulationMode, setSelectedCourse } = useGraphStore()
+  const { nodes, edges, simulationMode, multiSelectActive, setSelectedCourse, toggleCourseSelect } = useGraphStore()
   const [selected, setSelected] = useState<{ id: string; data: CourseNodeData } | null>(null)
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -44,11 +44,13 @@ export default function CurriculumGraph() {
       if (node.type === 'semesterHeader') return
       if (simulationMode) {
         setSelectedCourse(node.id)
+      } else if (multiSelectActive) {
+        toggleCourseSelect(node.id)
       } else {
         setSelected({ id: node.id, data: node.data as CourseNodeData })
       }
     },
-    [simulationMode, setSelectedCourse],
+    [simulationMode, multiSelectActive, setSelectedCourse, toggleCourseSelect],
   )
 
   return (
