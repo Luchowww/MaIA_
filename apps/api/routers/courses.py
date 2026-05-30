@@ -63,7 +63,12 @@ async def get_graph(
             StudentCourse.course_id.in_(course_ids),
         )
     )
-    student_statuses = {sc.course_id: sc.status for sc in student_courses_result.scalars().all()}
+    _raw_statuses = {sc.course_id: sc.status for sc in student_courses_result.scalars().all()}
+    # simulated is a transient UI state — never persist it to the graph view
+    student_statuses = {
+        cid: ("pending" if st == "simulated" else st)
+        for cid, st in _raw_statuses.items()
+    }
 
     nodes = [
         {
